@@ -1,0 +1,89 @@
+CREATE OR REPLACE FUNCTION get_potential_matches(user_id UUID, limit_count INT) 
+RETURNS TABLE (
+    id UUID,
+    name TEXT,
+    age SMALLINT,
+    gender SMALLINT,
+    avatar_url TEXT,
+    interests SMALLINT[]
+) AS $$
+BEGIN
+    RETURN QUERY 
+    SELECT 
+        p.id,
+        p.name,
+        p.age,
+        p.gender,
+        p.avatar_url,
+        p.interests
+    FROM profiles_test p
+    WHERE p.id != get_potential_matches.user_id
+    -- AND p.gender = (SELECT gender_preference FROM profiles_test WHERE id = get_potential_matches.user_id)
+    -- AND NOT EXISTS (
+    --     SELECT 1 
+    --     FROM matches m 
+    --     WHERE (m.user1_id = get_potential_matches.user_id AND m.user2_id = p.id) 
+    --        OR (m.user2_id = get_potential_matches.user_id AND m.user1_id = p.id)
+    -- )
+    ORDER BY p.last_active DESC
+    LIMIT get_potential_matches.limit_count;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+
+DECLARE
+  existing_match_id UUID;
+  is_new_match BOOLEAN := FALSE;
+BEGIN
+  -- Check if a match record already exists
+  SELECT id INTO existing_match_id
+  FROM matches
+  WHERE (user1_id = acting_user_id AND user2_id = target_user_id)
+     OR (user1_id = target_user_id AND user2_id = acting_user_id);
+
+  IF existing_match_id IS NULL THEN
+    -- Create a new match record
+    INSERT INTO matches (user1_id, user2_id, user1_action, matched_at)
+    VALUES (
+      acting_user_id, 
+      target_user_id, 
+      match_action, 
+      CASE WHEN match_action = 1 THEN NOW() ELSE NULL END
+    );
+    
+    -- Check if this new action resulted in a match
+    SELECT EXISTS(
+      SELECT 1 FROM matches 
+      WHERE user2_id = acting_user_id AND user1_id = target_user_id AND user1_action = 1
+    ) INTO is_new_match;
+  ELSE
+    -- Update the existing match record
+    UPDATE matches
+    SET 
+      user1_action = CASE WHEN user1_id = acting_user_id THEN match_action ELSE user1_action END,
+      user2_action = CASE WHEN user2_id = acting_user_id THEN match_action ELSE user2_action END,
+      matched_at = CASE 
+        WHEN (
+          (user1_id = acting_user_id AND user2_action = 1 AND match_action = 1) OR
+          (user2_id = acting_user_id AND user1_action = 1 AND match_action = 1)
+        ) THEN NOW()
+        ELSE matched_at
+      END
+    WHERE id = existing_match_id
+    RETURNING (user1_action = 1 AND user2_action = 1) INTO is_new_match;
+  END IF;
+
+  RETURN is_new_match;
+END;
+
+
+
+CREATE TABLE conversations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user1_id UUID NOT NULL REFERENCES profiles_test(id),
+  user2_id UUID NOT NULL REFERENCES profiles_test(id),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  last_message_at TIMESTAMP WITH TIME ZONE
+);
