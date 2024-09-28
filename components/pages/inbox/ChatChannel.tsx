@@ -393,7 +393,7 @@ export default function ChatChannel() {
     <SafeAreaView style={defaultStyles.SafeAreaView}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.container}
+        style={{ flex: 1 }}
         keyboardVerticalOffset={100}
       >
         <FlatList
@@ -401,9 +401,10 @@ export default function ChatChannel() {
           data={messagesWithDateLabels}
           renderItem={renderItem}
           keyExtractor={(item) =>
-            item.id || item.local_id || `${item.created_at}-${item.sender_id}`
+            `${item.id}-${item.created_at}-${item.sender_id}`
           }
           inverted
+          style={{ flex: 1 }}
         />
         {editingMessage ? (
           <View style={styles.editContainer}>

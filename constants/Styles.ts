@@ -13,9 +13,8 @@ export const defaultStyles = StyleSheet.create({
     pageHeader: {
         width: "100%",
         backgroundColor: Colors.light.white,
-        paddingHorizontal: 24,
-        paddingTop: 8,
-        paddingBottom: 32,
+        paddingHorizontal: 8,
+        paddingBottom: 8,
     },
     pageTitle: {
         fontSize: 28,
@@ -93,6 +92,13 @@ export const defaultStyles = StyleSheet.create({
         color: Colors.light.primary,
         textTransform: 'uppercase'
     },
+    disabledButtonText: {
+        color: Colors.light.textInverted
+    },
+    disabledButton: {
+        backgroundColor: Colors.light.tertiary,
+        borderColor: Colors.light.tertiary
+    },
     settingListButton: {
         display: 'flex',
         backgroundColor: Colors.light.background,
@@ -120,6 +126,7 @@ export const defaultStyles = StyleSheet.create({
         borderRadius: 8,
         marginBottom: 16,
         height: 64,
+        minHeight: 64,
     },
     radioButtonLabel: {
         fontSize: 16,

@@ -179,7 +179,9 @@ export default function RootLayout() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <AppProvider>
           <NotificationProvider>
+            <NavigationContainer>
             <RootNavigator session={session} />
+            </NavigationContainer>
           </NotificationProvider>
         </AppProvider>
       </GestureHandlerRootView>

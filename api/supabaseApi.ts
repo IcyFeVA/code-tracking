@@ -13,7 +13,7 @@ export const api = {
         console.error('Error fetching current user profile:', error);
         throw error;
     }
-    console.log('Current User Profile Data:', data);
+    //console.log('Current User Profile Data:', data);
     return data;
 },
 

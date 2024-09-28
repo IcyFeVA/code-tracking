@@ -6,6 +6,7 @@ import {
   Pressable,
   StyleSheet,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -250,89 +251,91 @@ export default function Inbox() {
   }, []);
 
   return (
-    <View style={{ flex: 1 }}>
-      <View style={defaultStyles.pageHeader}>
-        <Text style={defaultStyles.pageTitle}>Inbox</Text>
-      </View>
-      <GestureHandlerRootView>
-        <Tab.Navigator
-          initialRouteName="Chats"
-          screenOptions={{
-            tabBarScrollEnabled: false,
-            tabBarInactiveTintColor: Colors.light.text,
-            tabBarActiveTintColor: Colors.light.text,
-            tabBarLabelStyle: { fontSize: 14, fontWeight: "bold" },
-            tabBarIndicatorStyle: {
-              backgroundColor: Colors.light.text,
-              height: 2,
-            },
-            tabBarAndroidRipple: { borderless: false },
-            swipeEnabled: true,
-          }}
-        >
-          <Tab.Screen
-            name="Matches"
-            component={MatchesTab}
-            options={{
-              tabBarLabel: ({ color }) => (
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <Text style={{ color, fontWeight: "bold", fontSize: 16 }}>
-                    Activity
-                  </Text>
-                  {newMatches > 0 && (
-                    <View
-                      style={{
-                        backgroundColor: Colors.light.primary,
-                        borderRadius: 10,
-                        width: 20,
-                        height: 20,
-                        justifyContent: "center",
-                        alignItems: "center",
-                        marginLeft: 5,
-                      }}
-                    >
-                      <Text style={{ color: "white", fontSize: 12 }}>
-                        {newMatches}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              ),
+    <SafeAreaView style={defaultStyles.SafeAreaView}>
+      <ScrollView style={defaultStyles.innerContainer}>
+        <View style={defaultStyles.pageHeader}>
+          <Text style={defaultStyles.pageTitle}>My Profile</Text>
+        </View>
+        <GestureHandlerRootView>
+          <Tab.Navigator
+            initialRouteName="Chats"
+            screenOptions={{
+              tabBarScrollEnabled: false,
+              tabBarInactiveTintColor: Colors.light.text,
+              tabBarActiveTintColor: Colors.light.text,
+              tabBarLabelStyle: { fontSize: 14, fontWeight: "bold" },
+              tabBarIndicatorStyle: {
+                backgroundColor: Colors.light.text,
+                height: 2,
+              },
+              tabBarAndroidRipple: { borderless: false },
+              swipeEnabled: true,
             }}
-          />
-          <Tab.Screen
-            name="Chats"
-            component={ChatsTab}
-            options={{
-              tabBarLabel: ({ color }) => (
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <Text style={{ color, fontWeight: "bold", fontSize: 16 }}>
-                    Conversations
-                  </Text>
-                  {unreadMessages > 0 && (
-                    <View
-                      style={{
-                        backgroundColor: Colors.light.primary,
-                        borderRadius: 10,
-                        width: 20,
-                        height: 20,
-                        justifyContent: "center",
-                        alignItems: "center",
-                        marginLeft: 5,
-                      }}
-                    >
-                      <Text style={{ color: "white", fontSize: 12 }}>
-                        {unreadMessages}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              ),
-            }}
-          />
-        </Tab.Navigator>
-      </GestureHandlerRootView>
-    </View>
+          >
+            <Tab.Screen
+              name="Matches"
+              component={MatchesTab}
+              options={{
+                tabBarLabel: ({ color }) => (
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <Text style={{ color, fontWeight: "bold", fontSize: 16 }}>
+                      Activity
+                    </Text>
+                    {newMatches > 0 && (
+                      <View
+                        style={{
+                          backgroundColor: Colors.light.primary,
+                          borderRadius: 10,
+                          width: 20,
+                          height: 20,
+                          justifyContent: "center",
+                          alignItems: "center",
+                          marginLeft: 5,
+                        }}
+                      >
+                        <Text style={{ color: "white", fontSize: 12 }}>
+                          {newMatches}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                ),
+              }}
+            />
+            <Tab.Screen
+              name="Chats"
+              component={ChatsTab}
+              options={{
+                tabBarLabel: ({ color }) => (
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <Text style={{ color, fontWeight: "bold", fontSize: 16 }}>
+                      Conversations
+                    </Text>
+                    {unreadMessages > 0 && (
+                      <View
+                        style={{
+                          backgroundColor: Colors.light.primary,
+                          borderRadius: 10,
+                          width: 20,
+                          height: 20,
+                          justifyContent: "center",
+                          alignItems: "center",
+                          marginLeft: 5,
+                        }}
+                      >
+                        <Text style={{ color: "white", fontSize: 12 }}>
+                          {unreadMessages}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                ),
+              }}
+            />
+          </Tab.Navigator>
+        </GestureHandlerRootView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

@@ -90,22 +90,22 @@ export default function FilterAgeRange() {
 }
 
 const styles = StyleSheet.create({
-    label: {
-        ...defaultStyles.body,
-        marginBottom: 8,
-    },
-    sliderContainer: {
-        paddingHorizontal: 16,
-    },
-    slider: {
-        width: '90%',
-        height: 40,
-        alignSelf: 'center',
-    },
-    thumbStyle: {
-        borderWidth: 4,
-        height: 32,
-        width: 32,
-    },
-
+  label: {
+    ...defaultStyles.body,
+    marginBottom: 8,
+  },
+  sliderContainer: {
+    paddingHorizontal: 16,
+  },
+  slider: {
+    width: "90%",
+    height: 40,
+    alignSelf: "center",
+  },
+  thumbStyle: {
+    borderWidth: 4,
+    height: 32,
+    width: 32,
+    borderRadius: 16,
+  },
 });

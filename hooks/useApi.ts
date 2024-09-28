@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { api } from '@/api/supabaseApi';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
+import { useAppContext } from '@/providers/AppProvider';
 
 export const useProfile = () => {
   const session = useAuth();
@@ -15,7 +16,7 @@ export const useProfile = () => {
     setLoading(true);
     try {
         const data = await api.getCurrentUserProfile(session.user.id);
-        console.log('Fetched Current User Profile:', data);
+        //console.log('Fetched Current User Profile:', data);
         setCurrentUserProfile(data);
     } catch (err) {
         console.error('Error fetching current user profile:', err);
@@ -56,6 +57,7 @@ export const usePotentialMatches = () => {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { searchFilters } = useAppContext();
 
   const fetchMatches = useCallback(async (limit = 10) => {
     if (!session?.user?.id) return;
@@ -74,16 +76,35 @@ export const usePotentialMatches = () => {
     }
   }, [session]);
 
-  const fetchDiveMatches = useCallback(async (limit = 10) => {
+  const fetchFilteredMatches = useCallback(async () => {
     if (!session?.user?.id) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase.rpc('get_potential_dive_matches', {
+      // go through the searchFilters and if they are null, remove them
+      // const removeNullFilters = Object.fromEntries(Object.entries(searchFilters).filter(([key, value]) => value !== null && value !== undefined && value !== '' && value !== [] && value == NaN));
+
+      const { data, error } = await supabase.rpc('get_filtered_matches', {
         user_id: session.user.id,
-        limit_count: limit,
+        limit_count: 10,
+        looking_for: 1,
+        smoking_status_filter : 2,
+        // drinking_status_filter : 2,
       });
-      if (error) throw error;
-      setMatches(data || []);
+      if (error) {
+        if (error.code === 'PGRST202') {
+          console.log(`No potential matches found`);
+          setMatches([]);
+          return null;
+        } 
+        throw error;
+      }
+      console.log("Filtered matches data:", data);
+      if (Array.isArray(data) && data.length > 0) {
+        setMatches(data);
+      } else {
+        console.log("No matches found or invalid data format");
+        setMatches([]);
+      }
     } catch (err) {
       setError(err);
     } finally {
@@ -107,5 +128,5 @@ export const usePotentialMatches = () => {
     }
   }, [session]);
 
-  return { matches, loading, error, fetchMatches, fetchDiveMatches, recordAction };
+  return { matches, loading, error, fetchMatches, fetchFilteredMatches, recordAction };
 };

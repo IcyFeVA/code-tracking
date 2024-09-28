@@ -29,6 +29,27 @@ const getData = async (key) => {
     }
 };
 
+const getUserSearchFilters = async () => {
+    try {
+      const values = await AsyncStorage.multiGet([
+        "zodiac_sign",
+        "body_type",
+        "min_age",
+        "max_age",
+        "distance",
+        "gender",
+        "exercise_frequency",
+        "smoking_frequency",
+        "drinking_frequency",
+        "cannabis_frequency",
+        "diet_preference",
+      ]);
+      return values;
+    } catch (e) {
+      console.error("Error reading values", e);
+    }
+  };
+
 const resetUserSearchFilters = async () => {
     const genderPreferencesSet = ['genderPreference', JSON.stringify({ key: '', value: [] })]
     const ageRangeSet = ['ageRange', JSON.stringify({ key: '', value: '18-30' })]
@@ -62,4 +83,4 @@ const clearAllStorage = async () => {
     console.log('CLEARING STORAGE')
 }
 
-export { storeData, getData, resetUserSearchFilters, clearAllStorage };
+export { storeData, getData, getUserSearchFilters,resetUserSearchFilters, clearAllStorage };

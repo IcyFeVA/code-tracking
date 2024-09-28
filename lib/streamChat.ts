@@ -1,9 +1,9 @@
 // lib/streamChat.ts
 
 import { fetchStreamToken } from '@/api/auth';
-// import { StreamChat } from 'stream-chat';
+import { StreamChat } from 'stream-chat';
 
-// export const chatClient = StreamChat.getInstance('pcvjbntz7tfy');
+export const chatClient = StreamChat.getInstance('GET_YOUR_OWN_API_KEY');
 
 
 
