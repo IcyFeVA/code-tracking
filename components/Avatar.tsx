@@ -18,6 +18,7 @@ import * as ImageManipulator from "expo-image-manipulator";
 import * as FileSystem from "expo-file-system";
 import { Ionicons } from "@expo/vector-icons";
 import { Button } from 'react-native-ui-lib';
+import { SecondaryButton, SecondaryButtonText } from './ui/Buttons';
 
 type Props = {
   url: string | null;
@@ -296,15 +297,19 @@ export default function Avatar({ url, size = 70, onUpload }: Props) {
 
       <Spacer height={24} />
 
-      <Button
-            onPress={uploadAvatar}
-            style={[defaultStyles.button, defaultStyles.buttonShadow]}
-            disabled={uploading}
-          >
-            <Text style={defaultStyles.buttonLabel}>
-              {uploading ? "Updating ..." : "Replace Photo"}
-            </Text>
-          </Button>
+      <SecondaryButton
+        onPress={uploadAvatar}
+        style={[{ width: "100%" }, defaultStyles.buttonShadow]}
+        disabled={uploading}
+      >
+        <Ionicons name="image" size={24} color={Colors.light.primary} />
+
+        <Spacer width={8} />
+
+        <SecondaryButtonText>
+          {uploading ? "Uploading ..." : "Replace Photo"}
+        </SecondaryButtonText>
+      </SecondaryButton>
     </View>
   );
 }
