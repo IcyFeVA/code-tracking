@@ -19,6 +19,7 @@ import * as FileSystem from "expo-file-system";
 import { Ionicons } from "@expo/vector-icons";
 import { Button } from 'react-native-ui-lib';
 import { SecondaryButton, SecondaryButtonText } from './ui/Buttons';
+import { Image as ExpoImage } from 'expo-image';
 
 type Props = {
   url: string | null;
@@ -262,19 +263,29 @@ export default function Avatar({ url, size = 70, onUpload }: Props) {
 
   return (
     <View style={{ width: "100%" }}>
-      {avatarUrl ? (
-        <TouchableOpacity onPress={() => setModalVisible(true)}>
+      <View style={[avatarSize, styles.avatar]}>
+        {avatarUrl ? (
+          <TouchableOpacity onPress={() => setModalVisible(true)}>
+            <ExpoImage
+              source={{ uri: avatarUrl }}
+              style={[styles.image, { width: size, height: size }]}
+              placeholder={require('../assets/images/dummies/photos.png')}
+              contentFit="cover"
+              transition={200}
+            />
+          </TouchableOpacity>
+        ) : (
           <Image
-            source={{ uri: avatarUrl }}
-            accessibilityLabel="Avatar"
-            style={[avatarSize, styles.avatar, styles.image]}
+            source={require('../assets/images/dummies/photos.png')}
+            style={[styles.image, { width: size, height: size }]}
           />
-        </TouchableOpacity>
-      ) : uploading ? (
-        <ActivityIndicator size="large" color={Colors.light.accent} />
-      ) : (
-        <Spacer height={0} />
-      )}
+        )}
+        {uploading && (
+          <View style={[StyleSheet.absoluteFill, styles.uploadingOverlay]}>
+            <ActivityIndicator size="large" color={Colors.light.accent} />
+          </View>
+        )}
+      </View>
 
       <Modal
         animationType="fade"
@@ -319,6 +330,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: "hidden",
     aspectRatio: 1,
+    margin: 'auto',
   },
   image: {
     objectFit: "cover",
@@ -341,5 +353,10 @@ const styles = StyleSheet.create({
   fullScreenImage: {
     width: "100%",
     height: "100%",
+  },
+  uploadingOverlay: {
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
