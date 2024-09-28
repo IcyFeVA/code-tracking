@@ -90,7 +90,6 @@ const MyProfile = () => {
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
-      // Optionally, implement user-facing error handling here
     } finally {
       setLoading(false);
     }
