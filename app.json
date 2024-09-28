@@ -3,15 +3,12 @@
     "name": "crushy",
     "slug": "crushy",
     "version": "1.0.0",
-
     "web": {
       "favicon": "./assets/favicon.png"
     },
-
     "experiments": {
       "tsconfigPaths": true
     },
-
     "plugins": [
       [
         "expo-dev-launcher",
@@ -20,25 +17,31 @@
         }
       ]
     ],
-
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-
     "userInterfaceStyle": "light",
-
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.crushysocial.crushy"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
+      },
+      "package": "com.crushysocial.crushy"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "f068ee11-0703-47a6-adf1-55b1eb967272"
       }
     }
   }
