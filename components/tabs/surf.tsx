@@ -170,7 +170,7 @@ const Surf = () => {
 
   const navigateToProfile = useCallback(() => {
     if (!currentMatch) return;
-    navigation.navigate("Profile", {
+    navigation.navigate("SurfDetails", {
       id: currentMatch.id,
       imageStr,
     });

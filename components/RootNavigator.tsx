@@ -27,19 +27,19 @@ import Dive from "@/components/tabs/dive";
 import MyProfile from "@/components/pages/MyProfile";
 import ChannelList from "@/components/pages/inbox/Inbox";
 import ChatChannel from "@/components/pages/inbox/ChatChannel";
-import SearchFilters from "@/app/searchFilters";
+import SearchFilters from "@/components/pages/searchFilters";
 import Auth from "@/components/pages/Auth";
 import Onboarding from "@/components/pages/Onboarding";
-import Profile from "@/app/profile";
-import FilterGenderPreference from "@/app/searchFilters/filterGenderPreference";
-import FilterStarsign from "@/app/searchFilters/filterStarsign";
-import FilterAgeRange from "@/app/searchFilters/filterAgeRange";
-import FilterBodyType from "@/app/searchFilters/filterBodyType";
-import FilterExerciseFrequency from "@/app/searchFilters/filterExerciseFrequency";
-import FilterSmokingFrequency from "@/app/searchFilters/filterSmoking";
-import FilterDrinkingFrequency from "@/app/searchFilters/filterDrinking";
-import FilterCannabisFrequency from "@/app/searchFilters/filterCannabis";
-import FilterDietPreference from "@/app/searchFilters/filterDietPreference";
+import SurfDetails from "@/components/pages/SurfDetails";
+import FilterGenderPreference from "@/components/pages/searchFilters/filterGenderPreference";
+import FilterStarsign from "@/components/pages/searchFilters/filterStarsign";
+import FilterAgeRange from "@/components/pages/searchFilters/filterAgeRange";
+import FilterBodyType from "@/components/pages/searchFilters/filterBodyType";
+import FilterExerciseFrequency from "@/components/pages/searchFilters/filterExerciseFrequency";
+import FilterSmokingFrequency from "@/components/pages/searchFilters/filterSmoking";
+import FilterDrinkingFrequency from "@/components/pages/searchFilters/filterDrinking";
+import FilterCannabisFrequency from "@/components/pages/searchFilters/filterCannabis";
+import FilterDietPreference from "@/components/pages/searchFilters/filterDietPreference";
 import EditNameAge from "./pages/editprofile/EditNameAge";
 import EditBio from "./pages/editprofile/EditBio";
 import EditGender from "./pages/editprofile/EditGender";
@@ -252,7 +252,7 @@ export default function RootNavigator({ session }) {
                 }}
               />
               <Stack.Screen name="Dive" component={Dive} />
-              <Stack.Screen name="Profile" component={Profile} />
+              <Stack.Screen name="SurfDetails" component={SurfDetails} />
               <Stack.Screen name="SearchFilters" component={SearchFilters} />
               <Stack.Screen
                 name="ChatChannel"

@@ -161,7 +161,11 @@ export default function Onboarding() {
         "official",
         "admin",
         "administrator",
+        "mod",
         "moderator",
+        "moderators",
+        "moderatorship",
+        "moderatorships",
         "ceo",
         "cmo",
         "cto",
@@ -175,6 +179,18 @@ export default function Onboarding() {
         });
         return;
       }
+
+      const isNameValid = /^[^\s][^\s]{1,}(?!\s{2,})[^\s]+$/.test(
+        name.trim()
+      );
+      if (!isNameValid) {
+        Toast.show({
+          type: "default",
+          text1: "👋 Hey",
+          text2: "Please enter a valid name with no spaces",
+        });
+        return;
+      }  
     }
     if (currentStep === 1) {
       if (age === null || parseInt(age) > 111 || parseInt(age) < 17) {

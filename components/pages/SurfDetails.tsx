@@ -2,7 +2,7 @@ import { Colors } from '@/constants/Colors';
 import { defaultStyles } from '@/constants/Styles';
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useMemo, useState } from 'react';
-import { Image, View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator } from 'react-native';
+import { Image, View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
 import hobbiesInterests from '@/constants/Interests'
@@ -12,7 +12,7 @@ import Spacer from '@/components/Spacer';
 import { useRoute } from '@react-navigation/native';
 import WebView from "react-native-webview";
 
-export default function Profile({ route, navigation }) {
+export default function SurfDetails({ route, navigation }) {
   const session = useAuth();
   const { id, imageStr } = route.params;
   const [loading, setLoading] = useState<boolean>(false);

@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native'
 import React, { useCallback, useLayoutEffect, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Colors } from '@/constants/Colors'
@@ -21,6 +21,7 @@ export default function SearchFilters() {
   const getUserFilters = async () => {
     try {
       const values = await getUserSearchFilters();
+      console.log("--------------------", values)
       setSearchFilters(values);
     } catch (e) {
       console.error("Error reading values", e);
@@ -38,6 +39,10 @@ export default function SearchFilters() {
       getUserFilters();
     }, [])
   );
+
+  if(!searchFilters) {
+    return <ActivityIndicator size={"large"} color={Colors.light.accent} />;
+  }
 
   return (
     <SafeAreaView style={defaultStyles.SafeAreaView}>
