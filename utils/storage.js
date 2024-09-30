@@ -32,17 +32,16 @@ const getData = async (key) => {
 const getUserSearchFilters = async () => {
     try {
       const values = await AsyncStorage.multiGet([
-        "zodiac_sign",
-        "body_type",
-        "min_age",
-        "max_age",
-        "distance",
-        "gender",
-        "exercise_frequency",
-        "smoking_frequency",
-        "drinking_frequency",
-        "cannabis_frequency",
-        "diet_preference",
+        "filter_zodiac_sign",
+        "filter_body_type",
+        "filter_min_age",
+        "filter_max_age",
+        "filter_genderPreference",
+        "filter_exercise_frequency",
+        "filter_smoking_frequency",
+        "filter_drinking_frequency",
+        "filter_cannabis_frequency",
+        "filter_diet_preference",
       ]);
       return values;
     } catch (e) {
@@ -51,20 +50,8 @@ const getUserSearchFilters = async () => {
   };
 
 const resetUserSearchFilters = async () => {
-    const genderPreferencesSet = ['genderPreference', JSON.stringify({ key: '', value: [] })]
-    const ageRangeSet = ['ageRange', JSON.stringify({ key: '', value: '18-30' })]
-    const distanceSet = ['distance', JSON.stringify({ key: '40', value: '40' })]
-    const starSignPreference = ['starSignPreference', JSON.stringify({ key: '', value: '-' })]
-    const bodyTypePreference = ['bodyTypePreference', JSON.stringify({ key: '', value: '-' })]
-    const exerciseFrequency = ['exerciseFrequency', JSON.stringify({ key: '', value: '-' })]
-    const smokingFrequency = ['smokingFrequency', JSON.stringify({ key: '', value: '-' })]
-    const drinkingFrequency = ['drinkingFrequency', JSON.stringify({ key: '', value: '-' })]
-    const cannabisFrequency = ['cannabisFrequency', JSON.stringify({ key: '', value: '-' })]
-    const dietPreference = ['dietPreference', JSON.stringify({ key: '', value: '-' })]
-
-    try {
-        await AsyncStorage.multiSet([genderPreferencesSet, ageRangeSet, distanceSet, starSignPreference, bodyTypePreference,
-            exerciseFrequency, smokingFrequency, drinkingFrequency, cannabisFrequency, dietPreference])
+     try {
+        await AsyncStorage.multiRemove(['filter_genderPreference', 'filter_zodiac_sign'])
     } catch (e) {
         //save error
     }

@@ -7,7 +7,8 @@ import { Colors } from '@/constants/Colors';
 import { defaultStyles } from '@/constants/Styles';
 import Spacer from "@/components/Spacer";
 import { useAppContext } from '@/providers/AppProvider';
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type ItemData = {
     id: string;
@@ -28,44 +29,49 @@ const DATA: ItemData[] = [
 
 export default function FilterGenderPreference() {
     const { searchFilters, setSearchFilters } = useAppContext();
-    const [selectedItems, setSelectedItems] = useState<string[]>([]);
+    const [selectedItems, setSelectedItems] = useState<{id: string, title: string}[]>([]);
     const navigation = useNavigation();
 
+    // Load saved preferences
     useEffect(() => {
         const getSelectedItems = async () => {
-            const storedPreference = await getData('genderPreference');
-            if (storedPreference && storedPreference.value) {
-                setSelectedItems(storedPreference.value);
-            }
+            const storedPreference = await getData('filter_genderPreference');
+            console.log(storedPreference)
+            setSelectedItems(storedPreference || []);
         };
         getSelectedItems();
     }, []);
 
-    const handlePress = useCallback((itemTitle: string) => {
+    // Handle selecting/deselecting an item
+    const handlePress = useCallback((item: ItemData) => {
         setSelectedItems(prevSelectedItems => {
-            if (prevSelectedItems.includes(itemTitle)) {
-                return prevSelectedItems.filter(title => title !== itemTitle);
+            const isAlreadySelected = prevSelectedItems.some(selected => selected.id === item.id);
+            if (isAlreadySelected) {
+                return prevSelectedItems.filter(selected => selected.id !== item.id);
             } else {
-                return [...prevSelectedItems, itemTitle];
+                return [...prevSelectedItems, item];
             }
         });
     }, []);
 
+    // Save the selected items to storage
     const handleSave = useCallback(() => {
         setSearchFilters(prevFilters => ({
             ...prevFilters,
-            genderPreference: { key: '', value: selectedItems }
+            filter_genderPreference: selectedItems
         }));
-        storeData('genderPreference', { key: '', value: selectedItems })
+
+        storeData('filter_genderPreference', selectedItems)
             .then(() => {
-                console.log('genderPreference:', selectedItems);
+                console.log('filter_genderPreference:', selectedItems);
                 setTimeout(() => navigation.goBack(), 50);
             })
             .catch(error => console.error('Failed to save gender preference:', error));
     }, [selectedItems, setSearchFilters]);
 
-    const renderItem = useCallback(({ item }: { item: typeof DATA[0] }) => {
-        const isSelected = selectedItems.includes(item.title);
+    // Render each item with a Checkbox
+    const renderItem = useCallback(({ item }: { item: ItemData }) => {
+        const isSelected = selectedItems.some(selected => selected.id === item.id);
         const color = isSelected ? Colors.light.text : Colors.light.tertiary;
 
         return (
@@ -77,7 +83,7 @@ export default function FilterGenderPreference() {
                 containerStyle={[defaultStyles.checkboxButton, { borderColor: color }]}
                 labelStyle={defaultStyles.checkboxButtonLabel}
                 value={isSelected}
-                onValueChange={() => handlePress(item.title)}
+                onValueChange={() => handlePress(item)}
                 accessibilityLabel={`Select ${item.title}`}
             />
         );
@@ -108,56 +114,3 @@ export default function FilterGenderPreference() {
         </SafeAreaView>
     );
 }
-
-// ... styles remain the same ...
-const styles = StyleSheet.create({
-    bottomSheet: {
-        padding: 16,
-    },
-    bottomSheetListItem: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderColor: Colors.light.tertiary,
-        borderWidth: 1,
-        borderTopWidth: 0,
-        padding: 16,
-        borderRadius: 8,
-        backgroundColor: Colors.light.background,
-    },
-    bottomSheetListItemInner: {
-        flex: 1,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    listItemLabel: {
-        fontFamily: 'BodySemiBold',
-        fontSize: 16,
-        paddingHorizontal: 16,
-    },
-    firstItem: {
-        borderTopLeftRadius: 8,
-        borderTopRightRadius: 8,
-        borderTopWidth: 1,
-
-    },
-    lastItem: {
-        borderBottomLeftRadius: 8,
-        borderBottomRightRadius: 8,
-        borderTopWidth: 0,
-    },
-    active: {
-        color: Colors.light.primary,
-    },
-    container: {
-        flex: 1,
-        padding: 24,
-        backgroundColor: 'grey',
-    },
-
-
-
-});
-
-
-

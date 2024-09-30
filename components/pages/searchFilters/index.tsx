@@ -1,5 +1,5 @@
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native'
-import React, { useCallback, useLayoutEffect, useState } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Colors } from '@/constants/Colors'
 import { Button, Card, ListItem } from 'react-native-ui-lib'
@@ -20,27 +20,37 @@ export default function SearchFilters() {
 
   const getUserFilters = async () => {
     try {
-      const values = await getUserSearchFilters();
-      console.log("--------------------", values)
-      setSearchFilters(values);
+      const values = await getUserSearchFilters(); // Retrieve the stored data
+      const filterObject = Object.fromEntries(values); // Convert the array into an object
+  console.log('...', filterObject)
+      if (filterObject.filter_genderPreference) {
+        filterObject.filter_genderPreference = JSON.parse(filterObject.filter_genderPreference);
+      }
+  
+      setSearchFilters(filterObject);
     } catch (e) {
       console.error("Error reading values", e);
+      // Add user feedback here, e.g., alert or toast
     }
   };
+  
+  
 
   const resetSettings = async () => {
     await resetUserSearchFilters();
-    resetFilters();
-    getUserFilters();
+    // resetFilters();
+    await getUserFilters(); // Ensure this is awaited
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      getUserFilters();
-    }, [])
-  );
 
-  if(!searchFilters) {
+  useEffect(() => {
+    navigation.addListener('focus', () => {
+      getUserFilters(); 
+    });
+
+  }, [navigation]);
+
+  if (!searchFilters || Object.keys(searchFilters).length === 0) {
     return <ActivityIndicator size={"large"} color={Colors.light.accent} />;
   }
 
@@ -73,8 +83,9 @@ export default function SearchFilters() {
           >
             <Text style={defaultStyles.settingListButtonLabel}>Gender</Text>
             <Text style={[defaultStyles.settingListButtonLabel, styles.active]}>
-              {searchFilters.gender || "-"}
+              {searchFilters.filter_genderPreference && searchFilters.filter_genderPreference.length > 0 ? searchFilters.filter_genderPreference.length : '-'}
             </Text>
+
           </Button>
           <Button
             onPress={() => navigation.navigate("filterAgeRange")}
