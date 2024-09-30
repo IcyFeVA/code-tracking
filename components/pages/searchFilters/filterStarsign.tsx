@@ -33,21 +33,21 @@ export default function FilterStarSign() {
     const { searchFilters, setSearchFilters } = useAppContext();
     const navigation = useNavigation();
 
-    const handlePress = useCallback((key: string, value: string) => {
+    const handlePress = useCallback((id: string, title: string) => {
         setSearchFilters(prevFilters => ({
             ...prevFilters,
-            starSignPreference: { key, value }
+            starSignPreference: { id, title }
         }));
-        storeData('starSignPreference', { key, value })
+        storeData('filter_zodiac_sign', { id, title })
             .then(() => {
-                console.log('starSignPreference:', key, value);
+                console.log('filter_zodiac_sign:', id, title);
                 setTimeout(() => navigation.goBack(), 50);
             })
             .catch(error => console.error('Failed to save star sign preference:', error));
     }, [setSearchFilters]);
 
     const renderItem = useCallback(({ item }: { item: typeof DATA[0] }) => {
-        const color = item.id === searchFilters.starSignPreference.key ? Colors.light.text : Colors.light.tertiary;
+        const color = item.id === searchFilters.filter_zodiac_sign?.id ? Colors.light.text : Colors.light.tertiary;
 
         return (
             <RadioButton
@@ -57,12 +57,12 @@ export default function FilterStarSign() {
                 contentOnLeft
                 containerStyle={[defaultStyles.radioButton, { borderColor: color }]}
                 labelStyle={defaultStyles.radioButtonLabel}
-                selected={searchFilters.starSignPreference.key === item.id}
+                selected={searchFilters.filter_zodiac_sign?.id === item.id || false}
                 onPress={() => handlePress(item.id, item.title)}
                 accessibilityLabel={`Select ${item.title}`}
             />
         );
-    }, [searchFilters.starSignPreference, handlePress]);
+    }, [searchFilters.filter_zodiac_sign, handlePress]);
 
     return (
         <SafeAreaView style={defaultStyles.SafeAreaView}>
@@ -75,7 +75,7 @@ export default function FilterStarSign() {
                     data={DATA}
                     renderItem={renderItem}
                     keyExtractor={item => item.id}
-                    extraData={searchFilters.starSignPreference}
+                    extraData={searchFilters.filter_zodiac_sign}
                     showsVerticalScrollIndicator={false}
                 />
             </View>

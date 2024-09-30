@@ -51,7 +51,7 @@ const getUserSearchFilters = async () => {
 
 const resetUserSearchFilters = async () => {
      try {
-        await AsyncStorage.multiRemove(['filter_genderPreference', 'filter_zodiac_sign'])
+        await AsyncStorage.multiRemove(['filter_genderPreference', 'filter_min_age', 'filter_max_age', 'filter_zodiac_sign'])
     } catch (e) {
         //save error
     }

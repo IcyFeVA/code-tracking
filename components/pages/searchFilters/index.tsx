@@ -22,11 +22,14 @@ export default function SearchFilters() {
     try {
       const values = await getUserSearchFilters(); // Retrieve the stored data
       const filterObject = Object.fromEntries(values); // Convert the array into an object
-  console.log('...', filterObject)
+  
       if (filterObject.filter_genderPreference) {
         filterObject.filter_genderPreference = JSON.parse(filterObject.filter_genderPreference);
       }
-  
+      if (filterObject.filter_zodiac_sign) {
+        filterObject.filter_zodiac_sign = JSON.parse(filterObject.filter_zodiac_sign);
+      }
+      console.log('...', filterObject)
       setSearchFilters(filterObject);
     } catch (e) {
       console.error("Error reading values", e);
@@ -81,7 +84,7 @@ export default function SearchFilters() {
               styles.firstItem,
             ]}
           >
-            <Text style={defaultStyles.settingListButtonLabel}>Gender</Text>
+            <Text style={defaultStyles.settingListButtonLabel}>Gender Preference</Text>
             <Text style={[defaultStyles.settingListButtonLabel, styles.active]}>
               {searchFilters.filter_genderPreference && searchFilters.filter_genderPreference.length > 0 ? searchFilters.filter_genderPreference.length : '-'}
             </Text>
@@ -89,27 +92,16 @@ export default function SearchFilters() {
           </Button>
           <Button
             onPress={() => navigation.navigate("filterAgeRange")}
-            style={[defaultStyles.settingListButton, defaultStyles.noRadius]}
+            style={[defaultStyles.settingListButton, defaultStyles.noRadius, styles.lastItem]}
           >
             <Text style={defaultStyles.settingListButtonLabel}>Age Range</Text>
             <Text style={[defaultStyles.settingListButtonLabel, styles.active]}>
-              {searchFilters.min_age}-{searchFilters.max_age}
+            {searchFilters.filter_min_age && searchFilters.filter_max_age ? `${searchFilters.filter_min_age} - ${searchFilters.filter_max_age}` : '-'}
             </Text>
           </Button>
-          <Button
-            onPress={() => console.log("pressed")}
-            style={[
-              defaultStyles.settingListButton,
-              defaultStyles.noRadius,
-              styles.lastItem,
-            ]}
-          >
-            <Text style={defaultStyles.settingListButtonLabel}>Distance</Text>
-            <Text style={[defaultStyles.settingListButtonLabel, styles.active]}>
-              {searchFilters.distance} km
-            </Text>
-          </Button>
+
           <Spacer height={32} />
+
           <Text
             style={{
               fontFamily: "BodyBold",
@@ -151,7 +143,7 @@ export default function SearchFilters() {
           >
             <Text style={defaultStyles.settingListButtonLabel}>Star Sign</Text>
             <Text style={[defaultStyles.settingListButtonLabel, styles.active]}>
-              {searchFilters.zodiac_sign || "-"}
+              {searchFilters.filter_zodiac_sign ? searchFilters.filter_zodiac_sign.title : "-"}
             </Text>
           </Button>
           <Button
