@@ -16,21 +16,21 @@ export default function FilterBodyType() {
 
     const bodyTypeOptions = useMemo(() => getFieldOptions('body_type', 'en'), []);
 
-    const handlePress = useCallback((key: number, value: string) => {
+    const handlePress = useCallback((id: number, value: string) => {
         setSearchFilters(prevFilters => ({
             ...prevFilters,
-            bodyTypePreference: { key: key.toString(), value }
+            filter_body_type: { id: id.toString(), value }
         }));
-        storeData('bodyTypePreference', { key, value })
+        storeData('filter_body_type', { id, value })
             .then(() => {
-                console.log('bodyTypePreference:', key, value);
+                console.log('filter_body_type:', id, value);
                 setTimeout(() => navigation.goBack(), 50);
             })
             .catch(error => console.error('Failed to save body type preference:', error));
     }, [setSearchFilters, navigation]);
 
-    const renderItem = useCallback(({ item }: { item: { key: number; label: string } }) => {
-        const isSelected = item.key === searchFilters.bodyTypePreference?.key;
+    const renderItem = useCallback(({ item }: { item: { id: number; label: string } }) => {
+        const isSelected = item.id === searchFilters.filter_body_type?.id || null;
         const color = isSelected ? Colors.light.text : Colors.light.tertiary;
 
         return (
@@ -42,11 +42,11 @@ export default function FilterBodyType() {
                 containerStyle={[defaultStyles.radioButton, { borderColor: color }]}
                 labelStyle={defaultStyles.radioButtonLabel}
                 selected={isSelected}
-                onPress={() => handlePress(item.key, item.label)}
+                onPress={() => handlePress(item.id, item.label)}
                 accessibilityLabel={`Select ${item.label}`}
             />
         );
-    }, [searchFilters.bodyTypePreference, handlePress]);
+    }, [searchFilters.filter_body_type, handlePress]);
 
     return (
         <SafeAreaView style={defaultStyles.SafeAreaView}>
@@ -58,8 +58,8 @@ export default function FilterBodyType() {
                 <FlatList
                     data={bodyTypeOptions}
                     renderItem={renderItem}
-                    keyExtractor={item => item.key.toString()}
-                    extraData={searchFilters.bodyTypePreference}
+                    keyExtractor={item => item.id.toString()}
+                    extraData={searchFilters.filter_body_type}
                     showsVerticalScrollIndicator={false}
                 />
             </View>

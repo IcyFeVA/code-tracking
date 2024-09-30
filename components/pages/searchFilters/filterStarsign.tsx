@@ -11,36 +11,36 @@ import { useNavigation } from '@react-navigation/native'
 
 type ItemData = {
     id: string;
-    title: string;
+    value: string;
 };
 
 const DATA: ItemData[] = [
-    { id: '1', title: 'Aries' },
-    { id: '2', title: 'Taurus' },
-    { id: '3', title: 'Gemini' },
-    { id: '4', title: 'Cancer' },
-    { id: '5', title: 'Leo' },
-    { id: '6', title: 'Virgo' },
-    { id: '7', title: 'Libra' },
-    { id: '8', title: 'Scorpio' },
-    { id: '9', title: 'Sagittarius' },
-    { id: '10', title: 'Capricorn' },
-    { id: '11', title: 'Aquarius' },
-    { id: '12', title: 'Pisces' },
+    { id: '1', value: 'Aries' },
+    { id: '2', value: 'Taurus' },
+    { id: '3', value: 'Gemini' },
+    { id: '4', value: 'Cancer' },
+    { id: '5', value: 'Leo' },
+    { id: '6', value: 'Virgo' },
+    { id: '7', value: 'Libra' },
+    { id: '8', value: 'Scorpio' },
+    { id: '9', value: 'Sagittarius' },
+    { id: '10', value: 'Capricorn' },
+    { id: '11', value: 'Aquarius' },
+    { id: '12', value: 'Pisces' },
 ];
 
 export default function FilterStarSign() {
     const { searchFilters, setSearchFilters } = useAppContext();
     const navigation = useNavigation();
 
-    const handlePress = useCallback((id: string, title: string) => {
+    const handlePress = useCallback((id: string, value: string) => {
         setSearchFilters(prevFilters => ({
             ...prevFilters,
-            starSignPreference: { id, title }
+            starSignPreference: { id, value }
         }));
-        storeData('filter_zodiac_sign', { id, title })
+        storeData('filter_zodiac_sign', { id, value })
             .then(() => {
-                console.log('filter_zodiac_sign:', id, title);
+                console.log('filter_zodiac_sign:', id, value);
                 setTimeout(() => navigation.goBack(), 50);
             })
             .catch(error => console.error('Failed to save star sign preference:', error));
@@ -51,15 +51,15 @@ export default function FilterStarSign() {
 
         return (
             <RadioButton
-                label={item.title}
+                label={item.value}
                 size={20}
                 color={color}
                 contentOnLeft
                 containerStyle={[defaultStyles.radioButton, { borderColor: color }]}
                 labelStyle={defaultStyles.radioButtonLabel}
                 selected={searchFilters.filter_zodiac_sign?.id === item.id || false}
-                onPress={() => handlePress(item.id, item.title)}
-                accessibilityLabel={`Select ${item.title}`}
+                onPress={() => handlePress(item.id, item.value)}
+                accessibilityLabel={`Select ${item.value}`}
             />
         );
     }, [searchFilters.filter_zodiac_sign, handlePress]);

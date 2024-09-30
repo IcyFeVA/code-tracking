@@ -10,7 +10,9 @@ import Spacer from "@/components/Spacer";
 import hobbiesInterests from "@/constants/Interests";
 import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
+import { storeData } from '@/utils/storage'; // Add this import
+import { useAppContext } from '@/providers/AppProvider'; // Add this import
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Add this import
 
 const categories = [
   "Outdoor Activities",
@@ -26,36 +28,33 @@ const categories = [
 ];
 
 const FilterInterests = () => {
+  const { searchFilters, setSearchFilters } = useAppContext();
   const session = useAuth();
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const navigation = useNavigation();
 
   useEffect(() => {
-    if (session?.user) {
-      fetchUserInterests();
-    }
-  }, [session]);
-
-  const fetchUserInterests = async () => {
-    if (!session?.user) return;
-    try {
-      const { data, error } = await supabase
-        .from("profiles_test")
-        .select("interests")
-        .eq("id", session.user.id)
-        .single();
-
-      if (error) throw error;
-      if (data && data.interests) {
-        setSelectedInterests(data.interests);
+    const fetchUserInterests = async () => {
+      try {
+        const storedInterests = await AsyncStorage.getItem('filter_interests');
+        if (storedInterests) {
+          setSelectedInterests(JSON.parse(storedInterests));
+          // Update searchFilters here if needed
+          setSearchFilters(prevFilters => ({
+            ...prevFilters,
+            interests: JSON.parse(storedInterests)
+          }));
+        }
+      } catch (error) {
+        console.error("Error fetching user interests from AsyncStorage:", error);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Error fetching user interests:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
+
+    fetchUserInterests();
+  }, [setSearchFilters]); // Ensure setSearchFilters is in the dependency array
 
   const flattenedInterests = useMemo(() => {
     return hobbiesInterests.flatMap((section, index) => [
@@ -67,13 +66,19 @@ const FilterInterests = () => {
   const handleInterestToggle = useCallback((value: string) => {
     const intValue = parseInt(value);
     setSelectedInterests((prevInterests) => {
-      if (prevInterests.includes(intValue)) {
-        return prevInterests.filter((i) => i !== intValue);
-      } else {
-        return [...prevInterests, intValue];
-      }
+      const newInterests = prevInterests.includes(intValue)
+        ? prevInterests.filter((i) => i !== intValue)
+        : [...prevInterests, intValue];
+
+      // Update searchFilters here
+      setSearchFilters(prevFilters => ({
+        ...prevFilters,
+        interests: newInterests
+      }));
+
+      return newInterests;
     });
-  }, []);
+  }, [setSearchFilters]);
 
   const renderItem = useCallback(
     ({ item }) => {
@@ -109,8 +114,6 @@ const FilterInterests = () => {
   );
 
   const saveInterests = async () => {
-    if (!session?.user) return;
-
     if (selectedInterests.length === 0) {
       console.log("No interests selected");
       return;
@@ -118,16 +121,12 @@ const FilterInterests = () => {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase
-        .from("profiles_test")
-        .update({ interests: selectedInterests, updated_at: new Date() })
-        .eq("id", session.user.id);
-
-      if (error) throw error;
-
+      // Store interests locally in AsyncStorage
+      await AsyncStorage.setItem('filter_interests', JSON.stringify(selectedInterests));
       console.log("Interests saved successfully");
+      setTimeout(() => navigation.goBack(), 50);
     } catch (error) {
-      console.error("Error saving interests:", error);
+      console.error("Error saving interests to AsyncStorage:", error);
     } finally {
       setIsLoading(false);
     }

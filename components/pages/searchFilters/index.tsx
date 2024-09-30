@@ -23,11 +23,17 @@ export default function SearchFilters() {
       const values = await getUserSearchFilters(); // Retrieve the stored data
       const filterObject = Object.fromEntries(values); // Convert the array into an object
   
+      if (filterObject.filter_interests) {
+        filterObject.filter_interests = JSON.parse(filterObject.filter_interests);
+      }
       if (filterObject.filter_genderPreference) {
         filterObject.filter_genderPreference = JSON.parse(filterObject.filter_genderPreference);
       }
       if (filterObject.filter_zodiac_sign) {
         filterObject.filter_zodiac_sign = JSON.parse(filterObject.filter_zodiac_sign);
+      }
+      if (filterObject.filter_body_type) {
+        filterObject.filter_body_type = JSON.parse(filterObject.filter_body_type);
       }
       console.log('...', filterObject)
       setSearchFilters(filterObject);
@@ -84,9 +90,9 @@ export default function SearchFilters() {
               styles.firstItem,
             ]}
           >
-            <Text style={defaultStyles.settingListButtonLabel}>Gender Preference</Text>
+            <Text style={defaultStyles.settingListButtonLabel}>Gender</Text>
             <Text style={[defaultStyles.settingListButtonLabel, styles.active]}>
-              {searchFilters.filter_genderPreference && searchFilters.filter_genderPreference.length > 0 ? searchFilters.filter_genderPreference.length : '-'}
+              {searchFilters.filter_genderPreference ? (searchFilters.filter_genderPreference.length > 1 ? searchFilters.filter_genderPreference.length : searchFilters.filter_genderPreference[0].value) : '-'}
             </Text>
 
           </Button>
@@ -125,7 +131,7 @@ export default function SearchFilters() {
           >
             <Text style={defaultStyles.settingListButtonLabel}>Interests</Text>
             <Text style={[defaultStyles.settingListButtonLabel, styles.active]}>
-              -
+            {searchFilters.filter_interests && searchFilters.filter_interests.length > 0 ? searchFilters.filter_interests.length : '-'}
             </Text>
           </Button>
           <Button
@@ -134,7 +140,7 @@ export default function SearchFilters() {
           >
             <Text style={defaultStyles.settingListButtonLabel}>Body Type</Text>
             <Text style={[defaultStyles.settingListButtonLabel, styles.active]}>
-              {searchFilters.body_type || "-"}
+            {searchFilters.filter_body_type ? searchFilters.filter_body_type.value : "-"}
             </Text>
           </Button>
           <Button
@@ -143,7 +149,7 @@ export default function SearchFilters() {
           >
             <Text style={defaultStyles.settingListButtonLabel}>Zodiac Sign</Text>
             <Text style={[defaultStyles.settingListButtonLabel, styles.active]}>
-              {searchFilters.filter_zodiac_sign ? searchFilters.filter_zodiac_sign.title : "-"}
+              {searchFilters.filter_zodiac_sign ? searchFilters.filter_zodiac_sign.value : "-"}
             </Text>
           </Button>
           <Button

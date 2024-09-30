@@ -32,6 +32,7 @@ const getData = async (key) => {
 const getUserSearchFilters = async () => {
     try {
       const values = await AsyncStorage.multiGet([
+        "filter_interests",
         "filter_zodiac_sign",
         "filter_body_type",
         "filter_min_age",
@@ -51,7 +52,7 @@ const getUserSearchFilters = async () => {
 
 const resetUserSearchFilters = async () => {
      try {
-        await AsyncStorage.multiRemove(['filter_genderPreference', 'filter_min_age', 'filter_max_age', 'filter_zodiac_sign'])
+        await AsyncStorage.multiRemove(['filter_interests', 'filter_genderPreference', 'filter_min_age', 'filter_max_age', 'filter_zodiac_sign', 'filter_body_type'])
     } catch (e) {
         //save error
     }

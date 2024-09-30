@@ -12,24 +12,24 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type ItemData = {
     id: string;
-    title: string;
+    value: string;
 };
 
 const DATA: ItemData[] = [
-    { id: '1', title: 'Male' },
-    { id: '2', title: 'Female' },
-    { id: '3', title: 'Male (Transgender)' },
-    { id: '4', title: 'Female (Transgender)' },
-    { id: '5', title: 'Non-binary' },
-    { id: '6', title: 'Genderqueer' },
-    { id: '7', title: 'Genderfluid' },
-    { id: '8', title: 'Agender' },
-    { id: '9', title: 'Two-Spirit' },
+    { id: '1', value: 'Male' },
+    { id: '2', value: 'Female' },
+    { id: '3', value: 'Male (Transgender)' },
+    { id: '4', value: 'Female (Transgender)' },
+    { id: '5', value: 'Non-binary' },
+    { id: '6', value: 'Genderqueer' },
+    { id: '7', value: 'Genderfluid' },
+    { id: '8', value: 'Agender' },
+    { id: '9', value: 'Two-Spirit' },
 ];
 
 export default function FilterGenderPreference() {
     const { searchFilters, setSearchFilters } = useAppContext();
-    const [selectedItems, setSelectedItems] = useState<{id: string, title: string}[]>([]);
+    const [selectedItems, setSelectedItems] = useState<{id: string, value: string}[]>([]);
     const navigation = useNavigation();
 
     // Load saved preferences
@@ -76,7 +76,7 @@ export default function FilterGenderPreference() {
 
         return (
             <Checkbox
-                label={item.title}
+                label={item.value}
                 size={24}
                 color={color}
                 contentOnLeft
@@ -84,7 +84,7 @@ export default function FilterGenderPreference() {
                 labelStyle={defaultStyles.checkboxButtonLabel}
                 value={isSelected}
                 onValueChange={() => handlePress(item)}
-                accessibilityLabel={`Select ${item.title}`}
+                accessibilityLabel={`Select ${item.value}`}
             />
         );
     }, [selectedItems, handlePress]);
