@@ -31,6 +31,7 @@ import SearchFilters from "@/components/pages/searchFilters";
 import Auth from "@/components/pages/Auth";
 import Onboarding from "@/components/pages/Onboarding";
 import SurfDetails from "@/components/pages/SurfDetails";
+import FilterInterests from "@/components/pages/searchFilters/filterInterests"
 import FilterGenderPreference from "@/components/pages/searchFilters/filterGenderPreference";
 import FilterStarsign from "@/components/pages/searchFilters/filterStarsign";
 import FilterAgeRange from "@/components/pages/searchFilters/filterAgeRange";
@@ -280,6 +281,7 @@ export default function RootNavigator({ session }) {
                 ...TransitionPresets.SlideFromRightIOS,
               }}
             >
+              <Stack.Screen name="filterInterests" component={FilterInterests} />
               <Stack.Screen
                 name="filterGenderPreference"
                 component={FilterGenderPreference}

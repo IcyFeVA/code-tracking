@@ -116,7 +116,7 @@ export default function SearchFilters() {
           <Spacer height={8} />
 
           <Button
-            onPress={() => console.log("pressed")}
+            onPress={() => navigation.navigate("filterInterests")}
             style={[
               defaultStyles.settingListButton,
               defaultStyles.noRadius,
@@ -141,7 +141,7 @@ export default function SearchFilters() {
             onPress={() => navigation.navigate("filterStarsign")}
             style={[defaultStyles.settingListButton, defaultStyles.noRadius]}
           >
-            <Text style={defaultStyles.settingListButtonLabel}>Star Sign</Text>
+            <Text style={defaultStyles.settingListButtonLabel}>Zodiac Sign</Text>
             <Text style={[defaultStyles.settingListButtonLabel, styles.active]}>
               {searchFilters.filter_zodiac_sign ? searchFilters.filter_zodiac_sign.title : "-"}
             </Text>

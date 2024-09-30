@@ -69,7 +69,7 @@ export default function FilterStarSign() {
             <View style={defaultStyles.innerContainer}>
                 <Text style={defaultStyles.h2}>Star Sign Preference</Text>
                 <Spacer height={8} />
-                <Text style={defaultStyles.body}>Select your preferred star sign for potential matches.</Text>
+                <Text style={defaultStyles.body}>Select your preferred zodiac sign for potential matches.</Text>
                 <Spacer height={48} />
                 <FlatList
                     data={DATA}
