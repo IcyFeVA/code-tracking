@@ -139,8 +139,8 @@ const ChatView = () => {
           .eq('id', editingMessageId);
 
         if (error) throw error;
-        setEditingMessageId(null); // Reset editing state
-        setInputMessage(""); // Reset input message after editing
+        setEditingMessageId(null);
+        setInputMessage("")
       } else {
         // Insert new message
         const { error } = await supabase
