@@ -1,57 +1,149 @@
-import { Colors } from '@/constants/Colors'
-import { Chat, MessageType, defaultTheme } from '@flyerhq/react-native-chat-ui'
-import React, { useEffect, useState } from 'react'
-import { KeyboardAvoidingView, Platform, SafeAreaView, View } from 'react-native'
-import { SafeAreaProvider } from 'react-native-safe-area-context'
-
-// For the testing purposes, you should probably use https://github.com/uuidjs/uuid
-const uuidv4 = () => {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = Math.floor(Math.random() * 16)
-    const v = c === 'x' ? r : (r % 4) + 8
-    return v.toString(16)
-  })
-}
+import { Colors } from '@/constants/Colors';
+import { Chat, MessageType, defaultTheme } from '@flyerhq/react-native-chat-ui';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { KeyboardAvoidingView, Platform, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/hooks/useAuth';
 
 const ChatView = () => {
-  const [messages, setMessages] = useState<MessageType.Any[]>([])
-  const user = { id: '06c33e8b-e835-4736-80f4-63f44b66666c' }
+  const [messages, setMessages] = useState<MessageType.Any[]>([]);
+  const [inputMessage, setInputMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const session = useAuth();
+  const conversationId = '8223b0c8-937e-4d4f-98bc-0c2031204a74'; // Replace with actual conversation ID
 
   useEffect(() => {
-    const fetchMessages = async () => {
-      const messages = require('./fake_messages.json')
-      setMessages(messages)
+    fetchMessages();
+
+    const subscription = supabase
+      .channel(`conversation:${conversationId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'messages',
+        filter: `conversation_id=eq.${conversationId}`,
+      }, handleRealTimeUpdate)
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const fetchMessages = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (error) throw error;
+
+      const messages = data.map((msg) => ({
+        id: msg.id,
+        text: msg.content,
+        createdAt: new Date(msg.created_at).getTime(), // Convert to timestamp
+        author: {
+          id: msg.sender_id,
+          firstName: "John",
+          imageUrl: "https://avatars.githubusercontent.com/u/14123304?v=4"
+        },
+        status: msg.read_by,
+        type: 'text',
+      }));
+
+      // Sort messages in ascending order based on createdAt
+      messages.sort((a, b) => a.createdAt - b.createdAt);
+
+      setMessages((messages as Message[]) || []);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      Alert.alert("Error", "Failed to load messages. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
-    fetchMessages()
-  }, [])
+  };
 
-  const addMessage = (message: MessageType.Any) => {
-    setMessages([message, ...messages])
-  }
+  const handleRealTimeUpdate = (payload: any) => {
+    if (payload.eventType === "INSERT") {
+      handleNewMessage(payload);
+    } else if (payload.eventType === "UPDATE") {
+      handleMessageUpdate(payload);
+    } else if (payload.eventType === "DELETE") {
+      handleMessageDelete(payload);
+    }
+  };
 
-  const handleSendPress = (message: MessageType.PartialText) => {
-    const textMessage: MessageType.Text = {
-      author: user,
+  const handleNewMessage = useCallback((payload: { new: MessageType.Any }) => {
+    const newMessage = payload.new;
+    setMessages((prevMessages) => [newMessage, ...prevMessages]);
+  }, []);
+
+  const handleMessageUpdate = (payload: { old: MessageType.Any; new: MessageType.Any }) => {
+    setMessages((prevMessages) =>
+      prevMessages.map((msg) =>
+        msg.id === payload.new.id ? { ...msg, ...payload.new } : msg
+      )
+    );
+  };
+
+  const handleMessageDelete = (payload: { old: MessageType.Any }) => {
+    setMessages((prevMessages) =>
+      prevMessages.filter((msg) => msg.id !== payload.old.id)
+    );
+  };
+
+  const handleSendPress = async (message: MessageType.PartialText) => {
+    if (inputMessage.trim() === "" || !session?.user?.id) return;
+
+    const newMessage: MessageType.Text = {
+      author: { id: session.user.id },
       createdAt: Date.now(),
-      id: uuidv4(),
-      text: message.text,
+      id: Date.now().toString(),
+      text: inputMessage.trim(),
       type: 'text',
+    };
+
+    setMessages((prevMessages) => [newMessage, ...prevMessages]);
+    setInputMessage("");
+
+    try {
+      const { error } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: conversationId,
+          sender_id: session.user.id,
+          content: newMessage.text,
+        });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error sending message:", error);
+      Alert.alert("Error", "Failed to send message. Please try again.");
     }
-    addMessage(textMessage)
+  };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={Colors.light.primary} />
+      </SafeAreaView>
+    );
   }
 
   return (
-    // <KeyboardAvoidingView
-    //   behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    //   style={{ flex: 1 }}
-    // >
+    <SafeAreaView style={{ flex: 1 }}>
       <Chat
         messages={messages}
         onSendPress={handleSendPress}
-        user={user}
+        user={{ id: session?.user?.id }}
         showUserAvatars={true}
+        showUserNames={true}
         onMessageLongPress={(msg) => {
-          console.log('msg', msg)
+          console.log('msg', msg);
         }}
         textInputProps={{
           placeholder: 'Type a message',
@@ -59,11 +151,11 @@ const ChatView = () => {
         }}
         theme={{
           ...defaultTheme,
-          colors: { ...defaultTheme.colors, inputBackground: Colors.light.text, primary: Colors.light.accent, },
+          colors: { ...defaultTheme.colors, inputBackground: Colors.light.text, primary: Colors.light.accent },
         }}
       />
-    // </KeyboardAvoidingView>
-  )
-}
+    </SafeAreaView>
+  );
+};
 
-export default ChatView
+export default ChatView;
