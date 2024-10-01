@@ -55,9 +55,6 @@ const ChatView = () => {
         type: 'text',
       }));
 
-      // Sort messages in ascending order based on createdAt
-      messages.sort((a, b) => a.createdAt - b.createdAt);
-
       setMessages((messages as Message[]) || []);
     } catch (error) {
       console.error("Error fetching messages:", error);
@@ -79,7 +76,23 @@ const ChatView = () => {
 
   const handleNewMessage = useCallback((payload: { new: MessageType.Any }) => {
     const newMessage = payload.new;
-    setMessages((prevMessages) => [newMessage, ...prevMessages]);
+
+    // Format the new message to match the structure used in fetchMessages
+    const formattedMessage = {
+      id: newMessage.id,
+      text: newMessage.content,
+      createdAt: new Date(newMessage.created_at).getTime(), // Convert to timestamp
+      author: {
+        id: newMessage.sender_id,
+        firstName: "John", // You may want to replace this with actual user data
+        imageUrl: "https://avatars.githubusercontent.com/u/14123304?v=4"
+      },
+      status: newMessage.read_by,
+      type: 'text',
+    };
+
+    // Update messages state with the new formatted message
+    setMessages((prevMessages) => [formattedMessage, ...prevMessages]);
   }, []);
 
   const handleMessageUpdate = (payload: { old: MessageType.Any; new: MessageType.Any }) => {
@@ -97,17 +110,21 @@ const ChatView = () => {
   };
 
   const handleSendPress = async (message: MessageType.PartialText) => {
-    if (inputMessage.trim() === "" || !session?.user?.id) return;
+    if (message.text.trim() === "" || !session?.user.id) {
+        console.error("User is not authenticated or input message is empty.");
+        return;
+    }
 
-    const newMessage: MessageType.Text = {
-      author: { id: session.user.id },
-      createdAt: Date.now(),
-      id: Date.now().toString(),
-      text: inputMessage.trim(),
-      type: 'text',
-    };
+    // const newMessage: MessageType.Text = {
+    //   author: { id: session.user.id }, // Ensure session.user is defined
+    //   createdAt: Date.now(),
+    //   id: Date.now().toString(),
+    //   text: "TEST",
+    //   type: 'text',
+    // };
 
-    setMessages((prevMessages) => [newMessage, ...prevMessages]);
+    // Update state immediately to show the message in the chat
+    // setMessages((prevMessages) => [newMessage, ...prevMessages]);
     setInputMessage("");
 
     try {
@@ -116,7 +133,7 @@ const ChatView = () => {
         .insert({
           conversation_id: conversationId,
           sender_id: session.user.id,
-          content: newMessage.text,
+          content: message.text,
         });
 
       if (error) throw error;
@@ -141,7 +158,6 @@ const ChatView = () => {
         onSendPress={handleSendPress}
         user={{ id: session?.user?.id }}
         showUserAvatars={true}
-        showUserNames={true}
         onMessageLongPress={(msg) => {
           console.log('msg', msg);
         }}
