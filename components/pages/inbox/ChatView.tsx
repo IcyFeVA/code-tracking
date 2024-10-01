@@ -161,6 +161,9 @@ const ChatView = () => {
 
   // New function to handle message long press
   const handleMessageLongPress = (msg: MessageType.Any) => {
+    // Check if the message is deleted
+    if (msg.text === "This message was deleted.") return;
+
     if (msg.author.id === session?.user.id) { // Check if the message is sent by the user
       Alert.alert(
         "Message Options",
