@@ -161,8 +161,49 @@ const ChatView = () => {
   // New function to handle message long press
   const handleMessageLongPress = (msg: MessageType.Any) => {
     if (msg.author.id === session?.user.id) { // Check if the message is sent by the user
-      setInputMessage(msg.text); // Set the input to the message text
-      setEditingMessageId(msg.id); // Set the message ID for editing
+      Alert.alert(
+        "Message Options",
+        "Would you like to edit or delete this message?",
+        [
+          {
+            text: "Edit",
+            onPress: () => {
+              setInputMessage(msg.text); // Set the input to the message text
+              setEditingMessageId(msg.id); // Set the message ID for editing
+            }
+          },
+          {
+            text: "Delete",
+            onPress: () => handleDeleteMessage(msg.id),
+            style: "destructive"
+          },
+          {
+            text: "Cancel",
+            style: "cancel"
+          }
+        ]
+      );
+    }
+  };
+
+  const handleDeleteMessage = async (messageId: string) => {
+    try {
+      const { error } = await supabase
+        .from('messages')
+        .update({ content: "This message was deleted." }) // Set default deleted message
+        .eq('id', messageId);
+
+      if (error) throw error;
+
+      // Optionally, you can also remove the message from the local state
+      setMessages((prevMessages) =>
+        prevMessages.map((msg) =>
+          msg.id === messageId ? { ...msg, content: "This message was deleted." } : msg
+        )
+      );
+    } catch (error) {
+      console.error("Error deleting message:", error);
+      Alert.alert("Error", "Failed to delete message. Please try again.");
     }
   };
 
