@@ -53,6 +53,7 @@ export default function Inbox() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.light.background,
     // the height of the safe area view is 44 on ios and 0 on android
     paddingTop: Platform.OS === 'ios' ? 60 : 0,
   },
