@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { KeyboardAvoidingView, Platform, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
+import CustomMessage from '@/components/pages/inbox/CustomMessage';
 
 const ChatView = () => {
   const [messages, setMessages] = useState<MessageType.Any[]>([]);
@@ -222,7 +223,8 @@ const ChatView = () => {
         onSendPress={handleSendPress}
         user={{ id: session?.user?.id }}
         showUserAvatars={true}
-        onMessageLongPress={handleMessageLongPress} // Updated to use the new function
+        onMessageLongPress={handleMessageLongPress}
+        renderTextMessage={(message) => <CustomMessage message={message} isMine={message.author.id === session?.user?.id} />}
         textInputProps={{
           placeholder: 'Type a message',
           placeholderTextColor: Colors.light.tertiary,
@@ -231,7 +233,7 @@ const ChatView = () => {
         }}
         theme={{
           ...defaultTheme,
-          colors: { ...defaultTheme.colors, inputBackground: Colors.light.text, primary: Colors.light.accent },
+          colors: { ...defaultTheme.colors },
         }}
       />
     </SafeAreaView>
