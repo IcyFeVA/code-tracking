@@ -162,7 +162,7 @@ const ChatView = () => {
   // New function to handle message long press
   const handleMessageLongPress = (msg: MessageType.Any) => {
     // Check if the message is deleted
-    if (msg.text === "This message was deleted.") return;
+    if (msg.text === "DELETED") return;
 
     if (msg.author.id === session?.user.id) { // Check if the message is sent by the user
       Alert.alert(
@@ -194,7 +194,7 @@ const ChatView = () => {
     try {
       const { error } = await supabase
         .from('messages')
-        .update({ content: "This message was deleted." }) // Set default deleted message
+        .update({ content: "DELETED" }) // Set default deleted message
         .eq('id', messageId);
 
       if (error) throw error;
@@ -202,7 +202,7 @@ const ChatView = () => {
       // Optionally, you can also remove the message from the local state
       setMessages((prevMessages) =>
         prevMessages.map((msg) =>
-          msg.id === messageId ? { ...msg, content: "This message was deleted." } : msg
+          msg.id === messageId ? { ...msg, content: "DELETED" } : msg
         )
       );
     } catch (error) {
