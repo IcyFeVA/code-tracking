@@ -115,18 +115,6 @@ const ChatView = () => {
         return;
     }
 
-    // const newMessage: MessageType.Text = {
-    //   author: { id: session.user.id }, // Ensure session.user is defined
-    //   createdAt: Date.now(),
-    //   id: Date.now().toString(),
-    //   text: "TEST",
-    //   type: 'text',
-    // };
-
-    // Update state immediately to show the message in the chat
-    // setMessages((prevMessages) => [newMessage, ...prevMessages]);
-    setInputMessage("");
-
     try {
       const { error } = await supabase
         .from('messages')
