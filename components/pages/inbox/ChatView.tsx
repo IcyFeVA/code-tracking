@@ -9,6 +9,7 @@ const ChatView = () => {
   const [messages, setMessages] = useState<MessageType.Any[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null); // New state for editing
   const session = useAuth();
   const conversationId = '8223b0c8-937e-4d4f-98bc-0c2031204a74'; // Replace with actual conversation ID
 
@@ -96,9 +97,22 @@ const ChatView = () => {
   }, []);
 
   const handleMessageUpdate = (payload: { old: MessageType.Any; new: MessageType.Any }) => {
+    const updatedMessage = {
+      id: payload.new.id,
+      text: payload.new.content,
+      createdAt: new Date(payload.new.created_at).getTime(), // Convert to timestamp
+      author: {
+        id: payload.new.sender_id,
+        firstName: "John", // You may want to replace this with actual user data
+        imageUrl: "https://avatars.githubusercontent.com/u/14123304?v=4"
+      },
+      status: payload.new.read_by,
+      type: 'text',
+    };
+
     setMessages((prevMessages) =>
       prevMessages.map((msg) =>
-        msg.id === payload.new.id ? { ...msg, ...payload.new } : msg
+        msg.id === payload.new.id ? updatedMessage : msg
       )
     );
   };
@@ -116,18 +130,39 @@ const ChatView = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('messages')
-        .insert({
-          conversation_id: conversationId,
-          sender_id: session.user.id,
-          content: message.text,
-        });
+      if (editingMessageId) {
+        // Update existing message
+        const { error } = await supabase
+          .from('messages')
+          .update({ content: message.text })
+          .eq('id', editingMessageId);
 
-      if (error) throw error;
+        if (error) throw error;
+        setEditingMessageId(null); // Reset editing state
+        setInputMessage(""); // Reset input message after editing
+      } else {
+        // Insert new message
+        const { error } = await supabase
+          .from('messages')
+          .insert({
+            conversation_id: conversationId,
+            sender_id: session.user.id,
+            content: message.text,
+          });
+
+        if (error) throw error;
+      }
     } catch (error) {
       console.error("Error sending message:", error);
       Alert.alert("Error", "Failed to send message. Please try again.");
+    }
+  };
+
+  // New function to handle message long press
+  const handleMessageLongPress = (msg: MessageType.Any) => {
+    if (msg.author.id === session?.user.id) { // Check if the message is sent by the user
+      setInputMessage(msg.text); // Set the input to the message text
+      setEditingMessageId(msg.id); // Set the message ID for editing
     }
   };
 
@@ -146,12 +181,12 @@ const ChatView = () => {
         onSendPress={handleSendPress}
         user={{ id: session?.user?.id }}
         showUserAvatars={true}
-        onMessageLongPress={(msg) => {
-          console.log('msg', msg);
-        }}
+        onMessageLongPress={handleMessageLongPress} // Updated to use the new function
         textInputProps={{
           placeholder: 'Type a message',
           placeholderTextColor: Colors.light.tertiary,
+          value: inputMessage, // Bind input value to state
+          onChangeText: setInputMessage, // Update input state on change
         }}
         theme={{
           ...defaultTheme,
