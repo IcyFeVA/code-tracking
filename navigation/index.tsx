@@ -176,7 +176,7 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
+      {/* <GestureHandlerRootView style={{ flex: 1 }}> */}
         <AppProvider>
           <NotificationProvider>
             <NavigationContainer>
@@ -184,7 +184,7 @@ export default function RootLayout() {
             </NavigationContainer>
           </NotificationProvider>
         </AppProvider>
-      </GestureHandlerRootView>
+      {/* </GestureHandlerRootView> */}
     </SafeAreaProvider>
   );
 }
