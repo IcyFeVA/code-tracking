@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import CustomMessage from '@/components/pages/inbox/CustomMessage';
 import { useRoute } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 
 const ChatView = () => {
   const [messages, setMessages] = useState<MessageType.Any[]>([]);
@@ -14,7 +15,8 @@ const ChatView = () => {
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null); // New state for editing
   const session = useAuth();
   const route = useRoute();
-  // const { conversationId } = route.params;
+  const navigation = useNavigation();
+  const { user2_name } = route.params;
   const conversationId = '8223b0c8-937e-4d4f-98bc-0c2031204a74'; 
 
   useEffect(() => {
@@ -61,6 +63,7 @@ const ChatView = () => {
       }));
 
       setMessages((messages as Message[]) || []);
+      navigation.setOptions({ title: user2_name });
     } catch (error) {
       console.error("Error fetching messages:", error);
       Alert.alert("Error", "Failed to load messages. Please try again.");

@@ -263,13 +263,13 @@ export default function RootNavigator({ session }) {
               <Stack.Screen
                 name="ChatView"
                 component={ChatView}
-                options={{ headerShown: true, headerTitle: "", headerLeft(props) {
+                options={{ headerShown: true, headerLeft(props) {
                   return (
                     <Pressable onPress={() => navigation.goBack()} style={defaultStyles.backButton}>
                       <View style={{ flexDirection: "row", alignItems: "center" }}>
                         <Ionicons name="arrow-back" size={24} color={Colors.light.primary} />
                         <Spacer width={4} />
-                        <Text style={defaultStyles.backButtonText}>Back</Text>
+                        <Text style={defaultStyles.backButtonText}>Inbox</Text>
                       </View>
                     </Pressable>
                   );

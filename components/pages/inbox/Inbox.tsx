@@ -73,7 +73,7 @@ export default function Inbox() {
     <TouchableOpacity
       style={styles.conversationItem}
       onPress={() =>
-        navigation.navigate("ChatView", { conversationId: item.conversation_id })
+        navigation.navigate("ChatView", { conversationId: item.conversation_id, user2_name: item.profiles.name })
       }
     >
       <View style={styles.userInfo}>
