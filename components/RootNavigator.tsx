@@ -25,8 +25,8 @@ import Me from "@/components/tabs/me";
 import Surf from "@/components/tabs/surf";
 import Dive from "@/components/tabs/dive";
 import MyProfile from "@/components/pages/MyProfile";
-import ChannelList from "@/components/pages/inbox/Inbox";
-import ChatChannel from "@/components/pages/inbox/ChatChannel";
+import Inbox from "@/components/pages/inbox/Inbox";
+import ChatView from "@/components/pages/inbox/ChatView";
 import SearchFilters from "@/components/pages/searchFilters";
 import Auth from "@/components/pages/Auth";
 import Onboarding from "@/components/pages/Onboarding";
@@ -47,6 +47,11 @@ import EditGender from "./pages/editprofile/EditGender";
 import EditInterests from "./pages/editprofile/EditInterests";
 import EditLookingFor from "./pages/editprofile/EditLookingFor";
 import EditPronouns from "./pages/editprofile/EditPronouns";
+import { defaultStyles } from "@/constants/Styles";
+import { Ionicons } from "@expo/vector-icons";
+import { Colors } from "@/constants/Colors";
+import Spacer from "./Spacer";
+
 
 // Constants
 const TAB_ICONS = {
@@ -140,7 +145,7 @@ function TabNavigator() {
       <Tab.Screen name="Explore" component={Explore} />
       <Tab.Screen
         name="Inbox"
-        component={ChannelList}
+        component={Inbox}
         options={{
           tabBarBadge: totalNotifications > 0 ? totalNotifications : undefined,
         }}
@@ -153,7 +158,7 @@ function TabNavigator() {
 
 export default function RootNavigator({ session }) {
   const { showOnboarding, setShowOnboarding } = useAppContext();
-
+  const navigation = useNavigation();
   useEffect(() => {
     if (session) {
       checkOnboardingStatus();
@@ -256,9 +261,19 @@ export default function RootNavigator({ session }) {
               <Stack.Screen name="SurfDetails" component={SurfDetails} />
               <Stack.Screen name="SearchFilters" component={SearchFilters} />
               <Stack.Screen
-                name="ChatChannel"
-                component={ChatChannel}
-                options={{ headerShown: true }}
+                name="ChatView"
+                component={ChatView}
+                options={{ headerShown: true, headerTitle: "", headerLeft(props) {
+                  return (
+                    <Pressable onPress={() => navigation.goBack()} style={defaultStyles.backButton}>
+                      <View style={{ flexDirection: "row", alignItems: "center" }}>
+                        <Ionicons name="arrow-back" size={24} color={Colors.light.primary} />
+                        <Spacer width={4} />
+                        <Text style={defaultStyles.backButtonText}>Back</Text>
+                      </View>
+                    </Pressable>
+                  );
+                }, }}
               />
             </Stack.Group>
             <Stack.Group

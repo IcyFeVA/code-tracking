@@ -151,4 +151,13 @@ export const defaultStyles = StyleSheet.create({
     noRadius: {
         borderRadius: 0
     },
+    backButton: {
+        marginLeft: 16,
+        flexDirection: "row",
+    },
+    backButtonText: {
+        fontSize: 16,
+        fontFamily: 'BodySemiBold',
+        color: Colors.light.primary
+    }
 });

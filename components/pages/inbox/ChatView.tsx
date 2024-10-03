@@ -5,6 +5,7 @@ import { KeyboardAvoidingView, Platform, SafeAreaView, Alert, ActivityIndicator 
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import CustomMessage from '@/components/pages/inbox/CustomMessage';
+import { useRoute } from "@react-navigation/native";
 
 const ChatView = () => {
   const [messages, setMessages] = useState<MessageType.Any[]>([]);
@@ -12,7 +13,9 @@ const ChatView = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null); // New state for editing
   const session = useAuth();
-  const conversationId = '8223b0c8-937e-4d4f-98bc-0c2031204a74'; // Replace with actual conversation ID
+  const route = useRoute();
+  // const { conversationId } = route.params;
+  const conversationId = '8223b0c8-937e-4d4f-98bc-0c2031204a74'; 
 
   useEffect(() => {
     fetchMessages();
