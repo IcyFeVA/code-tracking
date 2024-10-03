@@ -152,6 +152,7 @@ const ChatView = () => {
           });
 
         if (error) throw error;
+        setInputMessage("");
       }
     } catch (error) {
       console.error("Error sending message:", error);
