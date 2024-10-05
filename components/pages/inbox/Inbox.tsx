@@ -2,12 +2,11 @@ import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   StyleSheet,
-  Platform,
   FlatList,
   TouchableOpacity,
   Text,
   ActivityIndicator,
-  ScrollView,
+  Image,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -15,16 +14,22 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 import { Colors } from "@/constants/Colors";
 import { defaultStyles } from "@/constants/Styles";
+import { formatDistanceToNow, isToday, format } from 'date-fns';
+import Spacer from "@/components/Spacer";
 
 type Conversation = {
-  conversation_id: string;
+  id: string;
   user2_id: string;
   profiles: {
     user_id: string;
     name: string;
+    avatar_url: string;
+    avatar_pixelated_url: string;
   };
   last_message: string;
   last_message_at: string;
+  looking_for: number;
+  matched_at: string;
 };
 
 export default function Inbox() {
@@ -47,21 +52,59 @@ export default function Inbox() {
   const fetchConversations = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("conversations")
+      // First, fetch the matches for the current user
+      const { data: matchesData, error: matchesError } = await supabase
+        .from('matches')
+        .select('id, user2_id, looking_for, matched_at')
+        .eq('user1_id', session?.user.id);
+
+      if (matchesError) throw matchesError;
+
+      // Now fetch the conversations based on the ids from matches
+      const conversationIds = matchesData.map(match => match.id);
+      const { data: conversationsData, error: conversationsError } = await supabase
+        .from('conversations')
         .select(`
           id,
-          user2_id,
-          profiles:conversations_user2_id_fkey(name),
           last_message,
           last_message_at
         `)
-        .eq("user1_id", session?.user.id)
-        .order("last_message_at", { ascending: false });
+        .in('id', conversationIds)
+        .order('last_message_at', { ascending: false });
 
-      if (error) throw error;
+      if (conversationsError) throw conversationsError;
 
-      setConversations(data as Conversation[]);
+      // Fetch profiles for user2_ids
+      const user2Ids = matchesData.map(match => match.user2_id);
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles_test')
+        .select('id, name, avatar_url, avatar_pixelated_url')
+        .in('id', user2Ids);
+
+      if (profilesError) throw profilesError;
+
+      // Combine the data
+      const transformedData: Conversation[] = conversationsData.map(conversation => {
+        const match = matchesData.find(m => m.id === conversation.id);
+        const profile = profilesData.find(p => p.id === match?.user2_id);
+
+        return {
+          id: conversation.id,
+          user2_id: match?.user2_id || '',
+          profiles: {
+            user_id: match?.user2_id || '',
+            name: profile?.name || '',
+            avatar_url: profile?.avatar_url || '',
+            avatar_pixelated_url: profile?.avatar_pixelated_url || '',
+          },
+          last_message: conversation.last_message || '',
+          last_message_at: conversation.last_message_at || '',
+          looking_for: match?.looking_for || 0,
+          matched_at: match?.matched_at || '',
+        };
+      });
+      // console.log(transformedData);
+      setConversations(transformedData);
     } catch (error) {
       console.error("Error fetching conversations:", error);
     } finally {
@@ -69,27 +112,65 @@ export default function Inbox() {
     }
   };
 
-  const renderConversationItem = ({ item }: { item: Conversation }) => (
-    <TouchableOpacity
-      style={styles.conversationItem}
-      onPress={() =>
-        navigation.navigate("ChatView", { conversationId: item.conversation_id, user2_name: item.profiles.name })
-      }
-    >
-      <View style={styles.userInfo}>
-        <Text style={styles.userName}>{item.profiles.name}</Text>
-        <Text style={styles.lastMessage} numberOfLines={1}>
-          {item.last_message}
+  const renderConversationItem = ({ item }: { item: Conversation }) => {
+    const avatarSource =
+      item.looking_for === 1 || item.looking_for === 2
+        ? { uri: item.profiles.avatar_pixelated_url }
+        : { uri: item.profiles.avatar_url };
+
+    const formattedDate = formatDistanceToNow(new Date(item.matched_at), { addSuffix: true });
+
+    if (item.last_message_at === "") {
+      return (
+        <TouchableOpacity
+          style={styles.conversationItem}
+          onPress={() =>
+            navigation.navigate("ChatView", { conversationId: item.id, user2_name: item.profiles.name })
+          }
+        >
+          <Image
+            source={avatarSource}
+            style={styles.avatar}
+          />
+          <View style={styles.userInfo}>
+            <Text style={styles.userName}>{item.profiles.name}</Text>
+              <Text style={{ color: Colors.light.success, fontWeight: "bold", marginTop: 4 }} numberOfLines={1}>
+                START CHAT
+              </Text>
+          </View>
+          <Text style={styles.time}>
+            {formattedDate}
+          </Text>
+        </TouchableOpacity>
+      );
+    };
+
+    return (
+      <TouchableOpacity
+        style={styles.conversationItem}
+        onPress={() =>
+          navigation.navigate("ChatView", { conversationId: item.id, user2_name: item.profiles.name })
+        }
+      >
+        <Image
+          source={avatarSource}
+          style={styles.avatar}
+        />
+        <View style={styles.userInfo}>
+          <Text style={styles.userName}>{item.profiles.name}</Text>
+          <Text style={styles.lastMessage} numberOfLines={1}>
+            {item.last_message}
+          </Text>
+        </View>
+        <Text style={styles.time}>
+          {isToday(new Date(item.last_message_at)) ? new Date(item.last_message_at).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }) : formattedDate}
         </Text>
-      </View>
-      <Text style={styles.time}>
-        {new Date(item.last_message_at).toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        })}
-      </Text>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   if (isLoading) {
     return (
@@ -111,8 +192,10 @@ export default function Inbox() {
     <SafeAreaView style={defaultStyles.SafeAreaView}>
       <View style={defaultStyles.innerContainer}>
         <View style={defaultStyles.pageHeader}>
-          <Text style={defaultStyles.pageTitle}>Inbox</Text>
+          <Text style={defaultStyles.pageTitle}>Messages</Text>
         </View>
+
+        <Spacer height={16} />
 
         {conversations.length === 0 ? (
           <View style={styles.emptyContainer}>
@@ -121,7 +204,7 @@ export default function Inbox() {
         ) : (
           <FlatList
             data={conversations}
-            keyExtractor={(item) => item.conversation_id}
+            keyExtractor={(item) => item.id}
             renderItem={renderConversationItem}
             contentContainerStyle={styles.listContent}
           />
@@ -136,10 +219,28 @@ const styles = StyleSheet.create({
   conversationItem: {
     flexDirection: "row",
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.tertiary,
     alignItems: "center",
     justifyContent: "space-between",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.light.tertiary,
+    marginBottom: 8,
+  },
+  newConversationItem: {
+    flexDirection: "row",
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Colors.light.primary,
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderRadius: 16,
+    marginBottom: 8,
+  },
+  avatar: { // Added avatar style
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 12,
   },
   userInfo: {
     flex: 1,

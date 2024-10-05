@@ -17,6 +17,7 @@ const ChatView = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const { user2_name } = route.params;
+  // const { conversationId } = route.params;
   const conversationId = '8223b0c8-937e-4d4f-98bc-0c2031204a74'; 
 
   useEffect(() => {

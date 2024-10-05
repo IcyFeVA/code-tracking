@@ -29,6 +29,7 @@ The Supabase database for this project contains the following tables:
 - matched_at: timestamp with time zone (nullable)
 - matched: boolean (nullable)
 - conversation_id: uuid (nullable)
+- looking_for: smallint (nullable)
 
 ### Table: hobbies_interests_user
 - id: bigint (not nullable)

@@ -24,6 +24,9 @@ export const Colors = {
     accent: '#7A37D0',
     secondary: '#F1F1F1',
     tertiary: '#D9D9D9',
+    success: '#28A745',
+    warning: '#FFC107',
+    error: '#DC2626',
   },
   dark: {
     white: '#FFFFFF',
@@ -42,5 +45,8 @@ export const Colors = {
     accent: '#7A37D0',
     secondary: '#F1F1F1',
     tertiary: '#D9D9D9',
+    success: '#28A745',
+    warning: '#FFC107',
+    error: '#DC2626',
   },
 };

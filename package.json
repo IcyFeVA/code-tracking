@@ -26,6 +26,7 @@
     "@shopify/flash-list": "^1.7.1",
     "@supabase/supabase-js": "^2.38.4",
     "base64-js": "^1.5.1",
+    "date-fns": "^4.1.0",
     "expo": "^51.0.34",
     "expo-dev-client": "~4.0.27",
     "expo-dev-launcher": "^4.0.22",

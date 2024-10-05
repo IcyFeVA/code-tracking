@@ -268,8 +268,8 @@ export default function RootNavigator({ session }) {
                     <Pressable onPress={() => navigation.goBack()} style={defaultStyles.backButton}>
                       <View style={{ flexDirection: "row", alignItems: "center" }}>
                         <Ionicons name="arrow-back" size={24} color={Colors.light.primary} />
-                        <Spacer width={4} />
-                        <Text style={defaultStyles.backButtonText}>Inbox</Text>
+                        {/* <Spacer width={4} />
+                        <Text style={defaultStyles.backButtonText}>Inbox</Text> */}
                       </View>
                     </Pressable>
                   );
