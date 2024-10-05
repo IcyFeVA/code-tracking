@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   View,
   StyleSheet,
@@ -39,7 +40,7 @@ export default function Inbox() {
   const navigation = useNavigation();
   const session = useAuth();
 
-  useEffect(() => {
+  const loadConversations = useCallback(() => {
     if (session?.user?.id) {
       setIsAuthenticated(true);
       fetchConversations();
@@ -48,6 +49,18 @@ export default function Inbox() {
       setIsLoading(false);
     }
   }, [session]);
+
+  // This effect runs once when the component mounts
+  useEffect(() => {
+    loadConversations();
+  }, [loadConversations]);
+
+  // This effect runs every time the screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadConversations();
+    }, [loadConversations])
+  );
 
   const fetchConversations = async () => {
     setIsLoading(true);
