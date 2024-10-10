@@ -65,7 +65,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
         return acc;
       }, {});
 
-      // console.log("AppProvider >>>>>>>>>>>>>>>>>>", filtersObj);
+      console.log('AppProvider >>>>>>>>>>>>>>>>>>', filtersObj);
 
       setSearchFilters(filtersObj);
     } catch (error) {

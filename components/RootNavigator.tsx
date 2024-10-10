@@ -1,5 +1,5 @@
 import React, { useEffect, lazy, Suspense } from "react";
-import { Image, Pressable, Platform } from 'react-native';
+import { Image, Pressable, Platform, View, ActivityIndicator } from 'react-native';
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator, TransitionPresets } from '@react-navigation/stack';
@@ -40,6 +40,7 @@ import EditPronouns from './pages/editprofile/EditPronouns';
 import { defaultStyles } from '@/constants/Styles';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
+import { Session, User } from '@supabase/supabase-js';
 
 // Constants
 const TAB_ICONS = {
@@ -128,25 +129,43 @@ function TabNavigator() {
   );
 }
 
-function RootNavigator({ session }) {
+interface RootNavigatorProps {
+  session: {
+    session: Session | null;
+    user: User | null;
+    isLoading: boolean;
+  };
+}
+
+function RootNavigator({ session }: RootNavigatorProps) {
   const { showOnboarding, setShowOnboarding } = useAppContext();
   const navigation = useNavigation();
 
+  // console.log('RootNavigator session:', session);
+
+  if (session.isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={Colors.light.accent} />
+      </View>
+    );
+  }
+
   useEffect(() => {
-    if (session) {
+    if (session.session && session.user) {
       checkOnboardingStatus();
       checkLookingForStatus();
     }
-  }, [session, session?.user.id]);
+  }, [session]);
 
   const checkOnboardingStatus = async () => {
     try {
       const onboardingComplete = await getData('onboardingComplete');
-      if (onboardingComplete === undefined) {
+      if (onboardingComplete === undefined && session.user?.id) {
         const { data } = await supabase
           .from('profiles_test')
           .select('name')
-          .eq('id', session?.user.id)
+          .eq('id', session.user.id)
           .single();
 
         if (data?.name != null) {
@@ -161,12 +180,14 @@ function RootNavigator({ session }) {
   };
 
   const checkLookingForStatus = async () => {
+    if (!session.user?.id) return;
+
     const lookingFor = await getData('lookingFor');
     if (lookingFor === undefined) {
       const { data } = await supabase
         .from('profiles_test')
         .select('looking_for')
-        .eq('id', session?.user.id)
+        .eq('id', session.user.id)
         .single();
 
       await storeData('lookingFor', data?.looking_for ?? 1);
@@ -185,7 +206,7 @@ function RootNavigator({ session }) {
     </Pressable>
   );
 
-  if (!session) {
+  if (!session.session || !session.user) {
     return (
       <Stack.Navigator>
         <Stack.Screen name="Auth" component={Auth} options={{ headerShown: false }} />
@@ -211,7 +232,7 @@ function RootNavigator({ session }) {
           options={{
             gestureEnabled: true,
             gestureDirection: 'vertical',
-            gestureResponseDistance: 400,
+            gestureResponseDistance: 500,
           }}
         />
         <Stack.Screen name="Dive" component={Dive} />

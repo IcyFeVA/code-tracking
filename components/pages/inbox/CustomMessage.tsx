@@ -5,7 +5,7 @@ import { MessageType } from '@flyerhq/react-native-chat-ui';
 import { Colors } from '@/constants/Colors';
 
 const CustomMessage = ({ message, isMine }: { message: MessageType.Any, isMine: boolean }) => {
-  const isDeleted = message.text === "DELETED";
+  const isDeleted = message.text.startsWith('@@DELETED@@');
 
 if(isDeleted) {
     return (

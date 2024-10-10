@@ -13,24 +13,28 @@ const ChatView = () => {
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null); // New state for editing
-  const session = useAuth();
+  const { user } = useAuth();
   const route = useRoute();
   const navigation = useNavigation();
   const { user2_name } = route.params;
   // const { conversationId } = route.params;
-  const conversationId = '8223b0c8-937e-4d4f-98bc-0c2031204a74'; 
+  const conversationId = '8223b0c8-937e-4d4f-98bc-0c2031204a74';
 
   useEffect(() => {
     fetchMessages();
 
     const subscription = supabase
       .channel(`conversation:${conversationId}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'messages',
-        filter: `conversation_id=eq.${conversationId}`,
-      }, handleRealTimeUpdate)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        handleRealTimeUpdate
+      )
       .subscribe();
 
     return () => {
@@ -56,8 +60,8 @@ const ChatView = () => {
         createdAt: new Date(msg.created_at).getTime(), // Convert to timestamp
         author: {
           id: msg.sender_id,
-          firstName: "John",
-          imageUrl: "https://avatars.githubusercontent.com/u/14123304?v=4"
+          firstName: 'John',
+          imageUrl: 'https://avatars.githubusercontent.com/u/14123304?v=4',
         },
         status: msg.read_by,
         type: 'text',
@@ -66,19 +70,19 @@ const ChatView = () => {
       setMessages((messages as Message[]) || []);
       navigation.setOptions({ title: user2_name });
     } catch (error) {
-      console.error("Error fetching messages:", error);
-      Alert.alert("Error", "Failed to load messages. Please try again.");
+      console.error('Error fetching messages:', error);
+      Alert.alert('Error', 'Failed to load messages. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleRealTimeUpdate = (payload: any) => {
-    if (payload.eventType === "INSERT") {
+    if (payload.eventType === 'INSERT') {
       handleNewMessage(payload);
-    } else if (payload.eventType === "UPDATE") {
+    } else if (payload.eventType === 'UPDATE') {
       handleMessageUpdate(payload);
-    } else if (payload.eventType === "DELETE") {
+    } else if (payload.eventType === 'DELETE') {
       handleMessageDelete(payload);
     }
   };
@@ -93,8 +97,8 @@ const ChatView = () => {
       createdAt: new Date(newMessage.created_at).getTime(), // Convert to timestamp
       author: {
         id: newMessage.sender_id,
-        firstName: "John", // You may want to replace this with actual user data
-        imageUrl: "https://avatars.githubusercontent.com/u/14123304?v=4"
+        firstName: 'John', // You may want to replace this with actual user data
+        imageUrl: 'https://avatars.githubusercontent.com/u/14123304?v=4',
       },
       status: newMessage.read_by,
       type: 'text',
@@ -111,30 +115,26 @@ const ChatView = () => {
       createdAt: new Date(payload.new.created_at).getTime(), // Convert to timestamp
       author: {
         id: payload.new.sender_id,
-        firstName: "John", // You may want to replace this with actual user data
-        imageUrl: "https://avatars.githubusercontent.com/u/14123304?v=4"
+        firstName: 'John', // You may want to replace this with actual user data
+        imageUrl: 'https://avatars.githubusercontent.com/u/14123304?v=4',
       },
       status: payload.new.read_by,
       type: 'text',
     };
 
     setMessages((prevMessages) =>
-      prevMessages.map((msg) =>
-        msg.id === payload.new.id ? updatedMessage : msg
-      )
+      prevMessages.map((msg) => (msg.id === payload.new.id ? updatedMessage : msg))
     );
   };
 
   const handleMessageDelete = (payload: { old: MessageType.Any }) => {
-    setMessages((prevMessages) =>
-      prevMessages.filter((msg) => msg.id !== payload.old.id)
-    );
+    setMessages((prevMessages) => prevMessages.filter((msg) => msg.id !== payload.old.id));
   };
 
   const handleSendPress = async (message: MessageType.PartialText) => {
-    if (message.text.trim() === "" || !session?.user.id) {
-        console.error("User is not authenticated or input message is empty.");
-        return;
+    if (message.text.trim() === '' || !user?.id) {
+      console.error('User is not authenticated or input message is empty.');
+      return;
     }
 
     try {
@@ -147,75 +147,74 @@ const ChatView = () => {
 
         if (error) throw error;
         setEditingMessageId(null);
-        setInputMessage("")
+        setInputMessage('');
       } else {
         // Insert new message
-        const { error } = await supabase
-          .from('messages')
-          .insert({
-            conversation_id: conversationId,
-            sender_id: session.user.id,
-            content: message.text,
-          });
+        const { error } = await supabase.from('messages').insert({
+          conversation_id: conversationId,
+          sender_id: user.id,
+          content: message.text,
+        });
 
         if (error) throw error;
-        setInputMessage("");
+        setInputMessage('');
       }
     } catch (error) {
-      console.error("Error sending message:", error);
-      Alert.alert("Error", "Failed to send message. Please try again.");
+      console.error('Error sending message:', error);
+      Alert.alert('Error', 'Failed to send message. Please try again.');
     }
   };
 
   // New function to handle message long press
   const handleMessageLongPress = (msg: MessageType.Any) => {
     // Check if the message is deleted
-    if (msg.text === "DELETED") return;
+    if (msg.text.startsWith('@@DELETED@@')) return;
 
-    if (msg.author.id === session?.user.id) { // Check if the message is sent by the user
-      Alert.alert(
-        "Message Options",
-        "Would you like to edit or delete this message?",
-        [
-          {
-            text: "Edit",
-            onPress: () => {
-              setInputMessage(msg.text); // Set the input to the message text
-              setEditingMessageId(msg.id); // Set the message ID for editing
-            }
+    if (msg.author.id === user?.id) {
+      // Check if the message is sent by the user
+      Alert.alert('Message Options', 'Would you like to edit or delete this message?', [
+        {
+          text: 'Edit',
+          onPress: () => {
+            setInputMessage(msg.text); // Set the input to the message text
+            setEditingMessageId(msg.id); // Set the message ID for editing
           },
-          {
-            text: "Delete",
-            onPress: () => handleDeleteMessage(msg.id),
-            style: "destructive"
-          },
-          {
-            text: "Cancel",
-            style: "cancel"
-          }
-        ]
-      );
+        },
+        {
+          text: 'Delete',
+          onPress: () => handleDeleteMessage(msg.id),
+          style: 'destructive',
+        },
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+      ]);
     }
   };
 
   const handleDeleteMessage = async (messageId: string) => {
     try {
+      const messageToDelete = messages.find((msg) => msg.id === messageId);
+      if (!messageToDelete) {
+        throw new Error('Message not found');
+      }
+
+      const updatedContent = `@@DELETED@@ ${messageToDelete.text}`;
+
       const { error } = await supabase
         .from('messages')
-        .update({ content: "DELETED" }) // Set default deleted message
+        .update({ content: updatedContent }) // Prefix deleted message
         .eq('id', messageId);
 
       if (error) throw error;
 
-      // Optionally, you can also remove the message from the local state
       setMessages((prevMessages) =>
-        prevMessages.map((msg) =>
-          msg.id === messageId ? { ...msg, content: "DELETED" } : msg
-        )
+        prevMessages.map((msg) => (msg.id === messageId ? { ...msg, text: updatedContent } : msg))
       );
     } catch (error) {
-      console.error("Error deleting message:", error);
-      Alert.alert("Error", "Failed to delete message. Please try again.");
+      console.error('Error deleting message:', error);
+      Alert.alert('Error', 'Failed to delete message. Please try again.');
     }
   };
 
@@ -228,24 +227,26 @@ const ChatView = () => {
   }
 
   return (
-        <Chat
-          messages={messages}
-        onSendPress={handleSendPress}
-        user={{ id: session?.user?.id }}
-        showUserAvatars={true}
-        onMessageLongPress={handleMessageLongPress}
-        renderTextMessage={(message) => <CustomMessage message={message} isMine={message.author.id === session?.user?.id} />}
-        textInputProps={{
-          placeholder: 'Type a message',
-          placeholderTextColor: Colors.light.tertiary,
-          value: inputMessage, // Bind input value to state
-          onChangeText: setInputMessage, // Update input state on change
-        }}
-        theme={{
-          ...defaultTheme,
-          colors: { ...defaultTheme.colors },
-        }}
-      />
+    <Chat
+      messages={messages}
+      onSendPress={handleSendPress}
+      user={{ id: user?.id || '' }}
+      showUserAvatars={false} // TODO: show user avatars
+      onMessageLongPress={handleMessageLongPress}
+      renderTextMessage={(message) => (
+        <CustomMessage message={message} isMine={message.author.id === user?.id} />
+      )}
+      textInputProps={{
+        placeholder: 'Type a message',
+        placeholderTextColor: Colors.light.tertiary,
+        value: inputMessage,
+        onChangeText: setInputMessage,
+      }}
+      theme={{
+        ...defaultTheme,
+        colors: { ...defaultTheme.colors },
+      }}
+    />
   );
 };
 
