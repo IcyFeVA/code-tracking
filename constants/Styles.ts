@@ -151,8 +151,12 @@ export const defaultStyles = StyleSheet.create({
     noRadius: {
         borderRadius: 0
     },
-    backButton: {
+    headerBackButton: {
         marginLeft: 16,
+        flexDirection: "row",
+    },
+    headerMoreButton: {
+        marginRight: 16,
         flexDirection: "row",
     },
     backButtonText: {

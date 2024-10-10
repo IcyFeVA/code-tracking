@@ -265,15 +265,21 @@ export default function RootNavigator({ session }) {
                 component={ChatView}
                 options={{ headerShown: true, headerLeft(props) {
                   return (
-                    <Pressable onPress={() => navigation.goBack()} style={defaultStyles.backButton}>
+                    <Pressable onPress={() => navigation.goBack()} style={defaultStyles.headerBackButton}>
                       <View style={{ flexDirection: "row", alignItems: "center" }}>
                         <Ionicons name="arrow-back" size={24} color={Colors.light.primary} />
-                        {/* <Spacer width={4} />
-                        <Text style={defaultStyles.backButtonText}>Inbox</Text> */}
                       </View>
                     </Pressable>
                   );
-                }, }}
+                }, headerRight(props) {
+                  return (
+                    <Pressable onPress={() => navigation.goBack()} style={defaultStyles.headerMoreButton}>
+                      <View style={{ flexDirection: "row", alignItems: "center" }}>
+                        <Ionicons name="ellipsis-vertical" size={24} color={Colors.light.primary} />
+                      </View>
+                    </Pressable>
+                  );
+                },}}
               />
             </Stack.Group>
             <Stack.Group

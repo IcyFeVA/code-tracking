@@ -136,7 +136,7 @@ export default function Inbox() {
     if (item.last_message_at === "") {
       return (
         <TouchableOpacity
-          style={styles.conversationItem}
+          style={[styles.conversationItem, { backgroundColor: Colors.light.backgroundSecondary, borderColor: Colors.light.primary }]}
           onPress={() =>
             navigation.navigate("ChatView", { conversationId: item.id, user2_name: item.profiles.name })
           }
@@ -147,13 +147,19 @@ export default function Inbox() {
           />
           <View style={styles.userInfo}>
             <Text style={styles.userName}>{item.profiles.name}</Text>
-              <Text style={{ color: Colors.light.success, fontWeight: "bold", marginTop: 4 }} numberOfLines={1}>
-                START CHAT
-              </Text>
           </View>
-          <Text style={styles.time}>
-            {formattedDate}
-          </Text>
+          <View>
+            <View style={styles.matchLabel}>
+              <Text style={styles.matchText}>
+                NEW MATCH
+              </Text>
+            </View>
+            <View>
+              <Text style={styles.time}>
+                {formattedDate}
+              </Text>
+            </View>
+          </View>
         </TouchableOpacity>
       );
     };
@@ -175,12 +181,12 @@ export default function Inbox() {
             {item.last_message}
           </Text>
         </View>
-        <Text style={styles.time}>
+        {/* <Text style={styles.time}>
           {isToday(new Date(item.last_message_at)) ? new Date(item.last_message_at).toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
           }) : formattedDate}
-        </Text>
+        </Text> */}
       </TouchableOpacity>
     );
   };
@@ -289,5 +295,16 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: 20,
+  },
+  matchLabel: {
+    backgroundColor: Colors.light.primary,
+    padding: 4,
+    borderRadius: 4,
+    marginBottom: 4,
+  },
+  matchText: {
+    color: Colors.light.white,
+    fontWeight: "bold",
+    fontSize: 12,
   },
 });

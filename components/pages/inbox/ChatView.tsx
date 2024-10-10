@@ -228,9 +228,8 @@ const ChatView = () => {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <Chat
-        messages={messages}
+        <Chat
+          messages={messages}
         onSendPress={handleSendPress}
         user={{ id: session?.user?.id }}
         showUserAvatars={true}
@@ -247,7 +246,6 @@ const ChatView = () => {
           colors: { ...defaultTheme.colors },
         }}
       />
-    </SafeAreaView>
   );
 };
 
