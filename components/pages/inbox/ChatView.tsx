@@ -1,12 +1,51 @@
 import { Colors } from '@/constants/Colors';
 import { Chat, MessageType, defaultTheme } from '@flyerhq/react-native-chat-ui';
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { KeyboardAvoidingView, Platform, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState, useRef, useCallback, useLayoutEffect } from 'react';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  Alert,
+  ActivityIndicator,
+  Pressable,
+} from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import CustomMessage from '@/components/pages/inbox/CustomMessage';
-import { useRoute } from "@react-navigation/native";
-import { useNavigation } from "@react-navigation/native";
+import { useRoute } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
+import {
+  DropdownMenuRoot,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  DropdownMenuItem,
+  DropdownMenuItemTitle,
+} from '@/components/ui/Dropdown';
+import { Ionicons } from '@expo/vector-icons';
+import { defaultStyles } from '@/constants/Styles';
+
+export function Menu() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <DropdownMenuRoot open={isOpen} onOpenChange={setIsOpen}>
+      <DropdownMenuTrigger asChild style={defaultStyles.headerMoreButton}>
+        <Pressable>
+          <Ionicons name="ellipsis-vertical" size={24} color={Colors.light.primary} />
+        </Pressable>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent>
+        <DropdownMenuItem key="fernando rojo">
+          <DropdownMenuItemTitle>Dana Scully</DropdownMenuItemTitle>
+        </DropdownMenuItem>
+        <DropdownMenuItem key="fernando rojo">
+          <DropdownMenuItemTitle>Fox Mulder</DropdownMenuItemTitle>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenuRoot>
+  );
+}
 
 const ChatView = () => {
   const [messages, setMessages] = useState<MessageType.Any[]>([]);
@@ -19,6 +58,12 @@ const ChatView = () => {
   const { user2_name } = route.params;
   const { conversationId } = route.params;
   // const conversationId = '8223b0c8-937e-4d4f-98bc-0c2031204a74';
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => <Menu />,
+    });
+  }, [navigation]);
 
   useEffect(() => {
     fetchMessages();
