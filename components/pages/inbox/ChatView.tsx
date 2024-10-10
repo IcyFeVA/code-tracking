@@ -10,15 +10,15 @@ import { useNavigation } from "@react-navigation/native";
 
 const ChatView = () => {
   const [messages, setMessages] = useState<MessageType.Any[]>([]);
-  const [inputMessage, setInputMessage] = useState("");
+  const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null); // New state for editing
   const { user } = useAuth();
   const route = useRoute();
   const navigation = useNavigation();
   const { user2_name } = route.params;
-  // const { conversationId } = route.params;
-  const conversationId = '8223b0c8-937e-4d4f-98bc-0c2031204a74';
+  const { conversationId } = route.params;
+  // const conversationId = '8223b0c8-937e-4d4f-98bc-0c2031204a74';
 
   useEffect(() => {
     fetchMessages();
