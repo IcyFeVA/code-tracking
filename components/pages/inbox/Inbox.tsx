@@ -30,7 +30,9 @@ type Conversation = {
   last_message: string;
   last_message_at: string;
   looking_for: number;
+  match_id: string;
   matched_at: string;
+  blocked_by: string | null;
 };
 
 export default function Inbox() {
@@ -68,30 +70,33 @@ export default function Inbox() {
       // First, fetch the matches for the current user
       const { data: matchesData, error: matchesError } = await supabase
         .from('matches')
-        .select('id, user2_id, looking_for, matched_at')
-        .or(`user1_id.eq.${session?.user.id},user2_id.eq.${session?.user.id}`)
+        .select('id, user2_id, looking_for, matched_at, blocked_by')
+        .or(`user1_id.eq.${session?.user?.id},user2_id.eq.${session?.user?.id}`)
         .not('matched_at', 'is', null)
+        .is('blocked_by', null)
         .eq('user1_action', 1)
         .eq('user2_action', 1);
 
       if (matchesError) throw matchesError;
 
       // Now fetch the conversations based on the ids from matches
-      const conversationIds = matchesData.map(match => match.id);
+      const conversationIds = matchesData.map((match) => match.id);
       const { data: conversationsData, error: conversationsError } = await supabase
         .from('conversations')
-        .select(`
+        .select(
+          `
           id,
           last_message,
           last_message_at
-        `)
+        `
+        )
         .in('id', conversationIds)
         .order('last_message_at', { ascending: false });
 
       if (conversationsError) throw conversationsError;
 
       // Fetch profiles for user2_ids
-      const user2Ids = matchesData.map(match => match.user2_id);
+      const user2Ids = matchesData.map((match) => match.user2_id);
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles_test')
         .select('id, name, avatar_url, avatar_pixelated_url')
@@ -100,9 +105,9 @@ export default function Inbox() {
       if (profilesError) throw profilesError;
 
       // Combine the data
-      const transformedData: Conversation[] = conversationsData.map(conversation => {
-        const match = matchesData.find(m => m.id === conversation.id);
-        const profile = profilesData.find(p => p.id === match?.user2_id);
+      const transformedData: Conversation[] = conversationsData.map((conversation) => {
+        const match = matchesData.find((m) => m.id === conversation.id);
+        const profile = profilesData.find((p) => p.id === match?.user2_id);
 
         return {
           id: conversation.id,
@@ -117,12 +122,14 @@ export default function Inbox() {
           last_message_at: conversation.last_message_at || '',
           looking_for: match?.looking_for || 0,
           matched_at: match?.matched_at || '',
+          match_id: match?.id || '',
+          blocked_by: match?.blocked_by || null,
         };
       });
       // console.log(transformedData);
       setConversations(transformedData);
     } catch (error) {
-      console.error("Error fetching conversations:", error);
+      console.error('Error fetching conversations:', error);
     } finally {
       setIsLoading(false);
     }
@@ -136,48 +143,54 @@ export default function Inbox() {
 
     const formattedDate = formatDistanceToNow(new Date(item.matched_at), { addSuffix: true });
 
-    if (item.last_message_at === "") {
+    if (item.last_message_at === '') {
       return (
         <TouchableOpacity
-          style={[styles.conversationItem, { backgroundColor: Colors.light.backgroundSecondary, borderColor: Colors.light.primary }]}
+          style={[
+            styles.conversationItem,
+            {
+              backgroundColor: Colors.light.backgroundSecondary,
+              borderColor: Colors.light.primary,
+            },
+          ]}
           onPress={() =>
-            navigation.navigate("ChatView", { conversationId: item.id, user2_name: item.profiles.name, user2_id: item.user2_id, looking_for: item.looking_for })
-          }
-        >
-          <Image
-            source={avatarSource}
-            style={styles.avatar}
-          />
+            navigation.navigate('ChatView', {
+              conversationId: item.id,
+              user2_name: item.profiles.name,
+              user2_id: item.user2_id,
+              looking_for: item.looking_for,
+              match_id: item.match_id,
+            })
+          }>
+          <Image source={avatarSource} style={styles.avatar} />
           <View style={styles.userInfo}>
             <Text style={styles.userName}>{item.profiles.name}</Text>
           </View>
           <View>
             <View style={styles.matchLabel}>
-              <Text style={styles.matchText}>
-                NEW MATCH
-              </Text>
+              <Text style={styles.matchText}>NEW MATCH</Text>
             </View>
             <View>
-              <Text style={styles.time}>
-                {formattedDate}
-              </Text>
+              <Text style={styles.time}>{formattedDate}</Text>
             </View>
           </View>
         </TouchableOpacity>
       );
-    };
+    }
 
     return (
       <TouchableOpacity
         style={styles.conversationItem}
         onPress={() =>
-          navigation.navigate("ChatView", { conversationId: item.id, user2_name: item.profiles.name, user2_id: item.user2_id, looking_for: item.looking_for })
-        }
-      >
-        <Image
-          source={avatarSource}
-          style={styles.avatar}
-        />
+          navigation.navigate('ChatView', {
+            conversationId: item.id,
+            user2_name: item.profiles.name,
+            user2_id: item.user2_id,
+            looking_for: item.looking_for,
+            match_id: item.match_id,
+          })
+        }>
+        <Image source={avatarSource} style={styles.avatar} />
         <View style={styles.userInfo}>
           <Text style={styles.userName}>{item.profiles.name}</Text>
           <Text style={styles.lastMessage} numberOfLines={1}>

@@ -26,9 +26,21 @@ import { defaultStyles } from '@/constants/Styles';
 
 export function Menu() {
   const navigation = useNavigation();
+  const session = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const route = useRoute();
-  const { user2_id, looking_for } = route.params;
+  const { match_id, user2_id, looking_for } = route.params;
+
+  async function blockUser(): Promise<void> {
+    const { data: matchesData, error: matchesError } = await supabase
+      .from('matches')
+      .update({ blocked_by: session?.user?.id })
+      .eq('id', match_id);
+
+    if (matchesError) throw matchesError;
+
+    navigation.goBack();
+  }
 
   return (
     <DropdownMenuRoot open={isOpen} onOpenChange={setIsOpen}>
@@ -39,8 +51,9 @@ export function Menu() {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent>
-
-        <DropdownMenuItem key="profile" onSelect={() => navigation.navigate('SurfDetails', { userId: user2_id, looking_for })}>
+        <DropdownMenuItem
+          key="profile"
+          onSelect={() => navigation.navigate('SurfDetails', { userId: user2_id, looking_for })}>
           <DropdownMenuItemTitle>View Profile</DropdownMenuItemTitle>
         </DropdownMenuItem>
 
@@ -48,10 +61,9 @@ export function Menu() {
           <DropdownMenuItemTitle>Report</DropdownMenuItemTitle>
         </DropdownMenuItem>
 
-        <DropdownMenuItem key="block" onSelect={() => {}}>
+        <DropdownMenuItem key="block" onSelect={blockUser}>
           <DropdownMenuItemTitle>Block</DropdownMenuItemTitle>
         </DropdownMenuItem>
-
       </DropdownMenuContent>
     </DropdownMenuRoot>
   );
