@@ -25,7 +25,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { defaultStyles } from '@/constants/Styles';
 
 export function Menu() {
+  const navigation = useNavigation();
   const [isOpen, setIsOpen] = useState(false);
+  const route = useRoute();
+  const { user2_id, looking_for } = route.params;
 
   return (
     <DropdownMenuRoot open={isOpen} onOpenChange={setIsOpen}>
@@ -36,12 +39,19 @@ export function Menu() {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent>
-        <DropdownMenuItem key="fernando rojo">
-          <DropdownMenuItemTitle>Dana Scully</DropdownMenuItemTitle>
+
+        <DropdownMenuItem key="profile" onSelect={() => navigation.navigate('SurfDetails', { userId: user2_id })}>
+          <DropdownMenuItemTitle>View Profile</DropdownMenuItemTitle>
         </DropdownMenuItem>
-        <DropdownMenuItem key="fernando rojo">
-          <DropdownMenuItemTitle>Fox Mulder</DropdownMenuItemTitle>
+
+        <DropdownMenuItem key="Report" onSelect={() => {}}>
+          <DropdownMenuItemTitle>Report</DropdownMenuItemTitle>
         </DropdownMenuItem>
+
+        <DropdownMenuItem key="block">
+          <DropdownMenuItemTitle>Block</DropdownMenuItemTitle>
+        </DropdownMenuItem>
+
       </DropdownMenuContent>
     </DropdownMenuRoot>
   );

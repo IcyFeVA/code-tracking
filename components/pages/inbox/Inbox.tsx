@@ -69,7 +69,10 @@ export default function Inbox() {
       const { data: matchesData, error: matchesError } = await supabase
         .from('matches')
         .select('id, user2_id, looking_for, matched_at')
-        .eq('user1_id', session?.user.id);
+        .or(`user1_id.eq.${session?.user.id},user2_id.eq.${session?.user.id}`)
+        .not('matched_at', 'is', null)
+        .eq('user1_action', 1)
+        .eq('user2_action', 1);
 
       if (matchesError) throw matchesError;
 
@@ -138,7 +141,7 @@ export default function Inbox() {
         <TouchableOpacity
           style={[styles.conversationItem, { backgroundColor: Colors.light.backgroundSecondary, borderColor: Colors.light.primary }]}
           onPress={() =>
-            navigation.navigate("ChatView", { conversationId: item.id, user2_name: item.profiles.name })
+            navigation.navigate("ChatView", { conversationId: item.id, user2_name: item.profiles.name, user2_id: item.user2_id, looking_for: item.looking_for })
           }
         >
           <Image
@@ -168,7 +171,7 @@ export default function Inbox() {
       <TouchableOpacity
         style={styles.conversationItem}
         onPress={() =>
-          navigation.navigate("ChatView", { conversationId: item.id, user2_name: item.profiles.name })
+          navigation.navigate("ChatView", { conversationId: item.id, user2_name: item.profiles.name, user2_id: item.user2_id, looking_for: item.looking_for })
         }
       >
         <Image
