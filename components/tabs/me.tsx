@@ -106,10 +106,7 @@ export default function Me() {
       <ScrollView
         style={defaultStyles.innerContainer}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
         <View style={defaultStyles.pageHeader}>
           <Text style={defaultStyles.pageTitle}>My Crushy</Text>
         </View>
@@ -119,7 +116,7 @@ export default function Me() {
         <View style={styles.profileSection}>
           <Image
             source={{
-              uri: profile.avatar_url || "https://via.placeholder.com/100",
+              uri: profile.avatar_url || 'https://via.placeholder.com/100',
             }}
             style={styles.avatar}
           />
@@ -127,9 +124,7 @@ export default function Me() {
             <Text style={styles.profileName}>
               {profile.name}, {profile.age}
             </Text>
-            <Text style={styles.membershipType}>
-              {profile.membership} Membership
-            </Text>
+            <Text style={styles.membershipType}>{profile.membership} Membership</Text>
           </View>
         </View>
 
@@ -137,22 +132,20 @@ export default function Me() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>About Me</Text>
-          {renderSectionButton("My Profile", () =>
-            navigation.navigate("MyProfile")
-          )}
-          {renderSectionButton("Account", () => {})}
-          {renderSectionButton("Blocked Profiles", () => {})}
+          {renderSectionButton('My Profile', () => navigation.navigate('MyProfile'))}
+          {renderSectionButton('Account', () => {})}
+          {renderSectionButton('Blocked Profiles', () => navigation.navigate('BlockedUsers'))}
         </View>
 
         <Spacer height={24} />
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>More</Text>
-          {renderSectionButton("App Settings", () => {})}
-          {renderSectionButton("Feedback", () => {})}
-          {renderSectionButton("Contact", () => {})}
-          {renderSectionButton("Terms of Service", () => {})}
-          {renderSectionButton("Privacy Policy", () => {})}
+          {renderSectionButton('App Settings', () => {})}
+          {renderSectionButton('Feedback', () => {})}
+          {renderSectionButton('Contact', () => {})}
+          {renderSectionButton('Terms of Service', () => {})}
+          {renderSectionButton('Privacy Policy', () => {})}
         </View>
 
         <Spacer height={24} />
@@ -160,11 +153,8 @@ export default function Me() {
         <Button
           onPress={handleLogout}
           style={[defaultStyles.button, defaultStyles.buttonShadow]}
-          disabled={loading}
-        >
-          <Text style={defaultStyles.buttonLabel}>
-            {loading ? "Logging out..." : "Log out"}
-          </Text>
+          disabled={loading}>
+          <Text style={defaultStyles.buttonLabel}>{loading ? 'Logging out...' : 'Log out'}</Text>
         </Button>
 
         <Spacer height={24} />
