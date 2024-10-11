@@ -40,7 +40,7 @@ export function Menu() {
 
       <DropdownMenuContent>
 
-        <DropdownMenuItem key="profile" onSelect={() => navigation.navigate('SurfDetails', { userId: user2_id })}>
+        <DropdownMenuItem key="profile" onSelect={() => navigation.navigate('SurfDetails', { userId: user2_id, looking_for })}>
           <DropdownMenuItemTitle>View Profile</DropdownMenuItemTitle>
         </DropdownMenuItem>
 
@@ -48,7 +48,7 @@ export function Menu() {
           <DropdownMenuItemTitle>Report</DropdownMenuItemTitle>
         </DropdownMenuItem>
 
-        <DropdownMenuItem key="block">
+        <DropdownMenuItem key="block" onSelect={() => {}}>
           <DropdownMenuItemTitle>Block</DropdownMenuItemTitle>
         </DropdownMenuItem>
 
