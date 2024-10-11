@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from 'react';
 import { useFocusEffect, useRoute } from '@react-navigation/native';
 import {
   View,
@@ -18,14 +18,6 @@ import { Colors } from '@/constants/Colors';
 import { defaultStyles } from '@/constants/Styles';
 import { formatDistanceToNow, isToday, format } from 'date-fns';
 import Spacer from '@/components/Spacer';
-import {
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuItemTitle,
-  DropdownMenuRoot,
-  DropdownMenuTrigger,
-} from '@/components/ui/Dropdown';
-import { Ionicons } from '@expo/vector-icons';
 
 type Conversation = {
   id: string;
@@ -44,42 +36,7 @@ type Conversation = {
   blocked_by: string | null;
 };
 
-export function Menu() {
-  const navigation = useNavigation();
-  const session = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
-  const route = useRoute();
-  const { match_id, user2_id, looking_for } = route.params;
-
-  async function blockUser(): Promise<void> {
-    const { data: matchesData, error: matchesError } = await supabase
-      .from('matches')
-      .update({ blocked_by: session?.user?.id })
-      .eq('id', match_id);
-
-    if (matchesError) throw matchesError;
-
-    navigation.goBack();
-  }
-
-  return (
-    <DropdownMenuRoot open={isOpen} onOpenChange={setIsOpen}>
-      <DropdownMenuTrigger asChild>
-        <Pressable>
-          <Ionicons name="ellipsis-vertical" size={24} color={Colors.light.primary} />
-        </Pressable>
-      </DropdownMenuTrigger>
-
-      <DropdownMenuContent>
-        <DropdownMenuItem key="blockedUsers" onSelect={() => navigation.navigate('BlockedUsers')}>
-          <DropdownMenuItemTitle>Blocked Users</DropdownMenuItemTitle>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenuRoot>
-  );
-}
-
-export default function Inbox() {
+export default function BlockedUsers() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -114,12 +71,8 @@ export default function Inbox() {
       // First, fetch the matches for the current user
       const { data: matchesData, error: matchesError } = await supabase
         .from('matches')
-        .select('id, user2_id, looking_for, matched_at, blocked_by')
-        .or(`user1_id.eq.${session?.user?.id},user2_id.eq.${session?.user?.id}`)
-        .not('matched_at', 'is', null)
-        .is('blocked_by', null)
-        .eq('user1_action', 1)
-        .eq('user2_action', 1);
+        .select('id, user2_id, matched_at')
+        .eq('blocked_by', session?.user?.id);
 
       if (matchesError) throw matchesError;
 
@@ -179,6 +132,17 @@ export default function Inbox() {
     }
   };
 
+  async function unblockUser(match_id: string): Promise<void> {
+    const { data: matchesData, error: matchesError } = await supabase
+      .from('matches')
+      .update({ blocked_by: null })
+      .eq('id', match_id);
+
+    if (matchesError) throw matchesError;
+
+    navigation.goBack();
+  }
+
   const renderConversationItem = ({ item }: { item: Conversation }) => {
     const avatarSource =
       item.looking_for === 1 || item.looking_for === 2
@@ -187,40 +151,24 @@ export default function Inbox() {
 
     const formattedDate = formatDistanceToNow(new Date(item.matched_at), { addSuffix: true });
 
-    if (item.last_message_at === '') {
-      return (
-        <TouchableOpacity
-          style={[
-            styles.conversationItem,
-            {
-              backgroundColor: Colors.light.backgroundSecondary,
-              borderColor: Colors.light.primary,
-            },
-          ]}
-          onPress={() =>
-            navigation.navigate('ChatView', {
-              conversationId: item.id,
-              user2_name: item.profiles.name,
-              user2_id: item.user2_id,
-              looking_for: item.looking_for,
-              match_id: item.match_id,
-            })
-          }>
-          <Image source={avatarSource} style={styles.avatar} />
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>{item.profiles.name}</Text>
+    return (
+      <TouchableOpacity
+        style={styles.conversationItem}
+        onPress={async () => unblockUser(item.match_id)}>
+        <Image source={avatarSource} style={styles.avatar} />
+        <View style={styles.userInfo}>
+          <Text style={styles.userName}>{item.profiles.name}</Text>
+        </View>
+        <View>
+          <View>
+            <Text style={styles.time}>Matched</Text>
           </View>
           <View>
-            <View style={styles.matchLabel}>
-              <Text style={styles.matchText}>NEW MATCH</Text>
-            </View>
-            <View>
-              <Text style={styles.time}>{formattedDate}</Text>
-            </View>
+            <Text style={styles.time}>{formattedDate}</Text>
           </View>
-        </TouchableOpacity>
-      );
-    }
+        </View>
+      </TouchableOpacity>
+    );
 
     return (
       <TouchableOpacity
@@ -270,20 +218,15 @@ export default function Inbox() {
   return (
     <SafeAreaView style={defaultStyles.SafeAreaView}>
       <View style={defaultStyles.innerContainer}>
-        <View
-          style={[
-            defaultStyles.pageHeader,
-            { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-          ]}>
-          <Text style={defaultStyles.pageTitle}>Messages</Text>
-          <Menu />
+        <View style={defaultStyles.pageHeader}>
+          <Text style={defaultStyles.pageTitle}>Blocked Users</Text>
         </View>
 
         <Spacer height={16} />
 
         {conversations.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No conversations yet.</Text>
+            <Text style={styles.emptyText}>No blocked users yet.</Text>
           </View>
         ) : (
           <FlatList
@@ -299,28 +242,28 @@ export default function Inbox() {
 }
 
 const styles = StyleSheet.create({
-
   conversationItem: {
-    flexDirection: "row",
+    flexDirection: 'row',
     padding: 16,
-    alignItems: "center",
-    justifyContent: "space-between",
+    alignItems: 'center',
+    justifyContent: 'space-between',
     borderRadius: 16,
     borderWidth: 1,
     borderColor: Colors.light.tertiary,
     marginBottom: 8,
   },
   newConversationItem: {
-    flexDirection: "row",
+    flexDirection: 'row',
     padding: 16,
     borderWidth: 1,
     borderColor: Colors.light.primary,
-    alignItems: "center",
-    justifyContent: "space-between",
+    alignItems: 'center',
+    justifyContent: 'space-between',
     borderRadius: 16,
     marginBottom: 8,
   },
-  avatar: { // Added avatar style
+  avatar: {
+    // Added avatar style
     width: 50,
     height: 50,
     borderRadius: 25,
@@ -332,7 +275,7 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     color: Colors.light.text,
   },
   lastMessage: {
@@ -346,13 +289,13 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   emptyText: {
     fontSize: 18,
@@ -369,7 +312,7 @@ const styles = StyleSheet.create({
   },
   matchText: {
     color: Colors.light.white,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     fontSize: 12,
   },
 });

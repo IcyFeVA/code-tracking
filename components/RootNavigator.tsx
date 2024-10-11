@@ -21,6 +21,7 @@ import SearchFilters from '@/components/pages/searchFilters';
 import Auth from '@/components/pages/Auth';
 import Onboarding from '@/components/pages/Onboarding';
 import SurfDetails from '@/components/pages/SurfDetails';
+import BlockedUsers from '@/components/pages/BlockedUsers';
 import FilterInterests from '@/components/pages/searchFilters/filterInterests';
 import FilterGenderPreference from '@/components/pages/searchFilters/filterGenderPreference';
 import FilterStarsign from '@/components/pages/searchFilters/filterStarsign';
@@ -194,15 +195,9 @@ function RootNavigator({ session }: RootNavigatorProps) {
     }
   };
 
-  const renderHeaderLeft = () => (
+  const renderHeaderBackButton = () => (
     <Pressable onPress={() => navigation.goBack()} style={defaultStyles.headerBackButton}>
       <Ionicons name="arrow-back" size={24} color={Colors.light.primary} />
-    </Pressable>
-  );
-
-  const renderHeaderRight = () => (
-    <Pressable onPress={() => navigation.goBack()} style={defaultStyles.headerMoreButton}>
-      <Ionicons name="ellipsis-vertical" size={24} color={Colors.light.primary} />
     </Pressable>
   );
 
@@ -243,8 +238,7 @@ function RootNavigator({ session }: RootNavigatorProps) {
           component={ChatView}
           options={{
             headerShown: true,
-            headerLeft: renderHeaderLeft,
-            headerRight: renderHeaderRight,
+            headerLeft: renderHeaderBackButton,
           }}
         />
       </Stack.Group>
@@ -256,6 +250,7 @@ function RootNavigator({ session }: RootNavigatorProps) {
         <Stack.Screen name="EditInterests" component={EditInterests} />
         <Stack.Screen name="EditLookingFor" component={EditLookingFor} />
         <Stack.Screen name="EditPronouns" component={EditPronouns} />
+        <Stack.Screen name="BlockedUsers" component={BlockedUsers} />
       </Stack.Group>
       <Stack.Group screenOptions={{ headerShown: false, ...TransitionPresets.SlideFromRightIOS }}>
         <Stack.Screen name="filterInterests" component={FilterInterests} />
