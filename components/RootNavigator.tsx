@@ -38,6 +38,9 @@ import EditGender from './pages/editprofile/EditGender';
 import EditInterests from './pages/editprofile/EditInterests';
 import EditLookingFor from './pages/editprofile/EditLookingFor';
 import EditPronouns from './pages/editprofile/EditPronouns';
+import TermsOfService from '@/components/pages/terms-of-service';
+import PrivacyPolicy from '@/components/pages/privacy-policy';
+import Contact from '@/components/pages/Contact';
 import { defaultStyles } from '@/constants/Styles';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
@@ -263,6 +266,11 @@ function RootNavigator({ session }: RootNavigatorProps) {
         <Stack.Screen name="filterDrinkingFrequency" component={FilterDrinkingFrequency} />
         <Stack.Screen name="filterCannabisFrequency" component={FilterCannabisFrequency} />
         <Stack.Screen name="filterDietPreference" component={FilterDietPreference} />
+      </Stack.Group>
+      <Stack.Group screenOptions={{ headerShown: false, ...TransitionPresets.BottomSheetAndroid }}>
+        <Stack.Screen name="TermsOfService" component={TermsOfService} />
+        <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicy} />
+        <Stack.Screen name="Contact" component={Contact} />
       </Stack.Group>
     </Stack.Navigator>
   );

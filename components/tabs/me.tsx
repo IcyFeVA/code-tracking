@@ -1,23 +1,15 @@
-import React, { useState, useEffect, useCallback } from "react";
-import {
-  StyleSheet,
-  View,
-  Text,
-  ScrollView,
-  Pressable,
-  Image,
-  RefreshControl,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/lib/supabase";
-import { Colors } from "@/constants/Colors";
-import { defaultStyles } from "@/constants/Styles";
-import Spacer from "@/components/Spacer";
-import { Button } from "react-native-ui-lib";
-import { Alert } from "react-native";
-import { clearAllStorage } from "@/utils/storage";
+import React, { useState, useEffect, useCallback, version } from 'react';
+import { StyleSheet, View, Text, ScrollView, Pressable, Image, RefreshControl } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/lib/supabase';
+import { Colors } from '@/constants/Colors';
+import { defaultStyles } from '@/constants/Styles';
+import Spacer from '@/components/Spacer';
+import { Button } from 'react-native-ui-lib';
+import { Alert } from 'react-native';
+import { clearAllStorage } from '@/utils/storage';
 
 export default function Me() {
   const session = useAuth();
@@ -25,10 +17,10 @@ export default function Me() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [profile, setProfile] = useState({
-    name: "",
-    age: "",
-    avatar_url: "",
-    membership: "Free", // You might want to fetch this from the database
+    name: '',
+    age: '',
+    avatar_url: '',
+    membership: 'Free', // You might want to fetch this from the database
   });
 
   useEffect(() => {
@@ -39,14 +31,14 @@ export default function Me() {
     try {
       setLoading(true);
       if (!session?.user) {
-        console.log("No user on the session, skipping profile fetch");
+        console.log('No user on the session, skipping profile fetch');
         return; // Exit early if there's no user
       }
 
       const { data, error, status } = await supabase
-        .from("profiles_test")
-        .select("*")
-        .eq("id", session.user.id)
+        .from('profiles_test')
+        .select('*')
+        .eq('id', session.user.id)
         .single();
 
       if (error && status !== 406) throw error;
@@ -54,17 +46,17 @@ export default function Me() {
       if (data) {
         setProfile({
           ...profile,
-          name: data.name || "",
-          age: data.age ? data.age.toString() : "",
+          name: data.name || '',
+          age: data.age ? data.age.toString() : '',
           avatar_url: data.avatar_url
-            ? data.avatar_url.includes("supabase")
+            ? data.avatar_url.includes('supabase')
               ? data.avatar_url
               : `https://mmarjzhissgpyfwxudqd.supabase.co/storage/v1/object/public/avatars/${data.avatar_url}`
-            : "",
+            : '',
         });
       }
     } catch (error) {
-      console.error("Error fetching profile:", error);
+      console.error('Error fetching profile:', error);
     } finally {
       setLoading(false);
     }
@@ -91,11 +83,8 @@ export default function Me() {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
     } catch (error) {
-      console.error("Error signing out:", error);
-      Alert.alert(
-        "Error",
-        "An error occurred while signing out. Please try again."
-      );
+      console.error('Error signing out:', error);
+      Alert.alert('Error', 'An error occurred while signing out. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -134,7 +123,7 @@ export default function Me() {
           <Text style={styles.sectionTitle}>About Me</Text>
           {renderSectionButton('My Profile', () => navigation.navigate('MyProfile'))}
           {renderSectionButton('Account', () => {})}
-          {renderSectionButton('Blocked Profiles', () => navigation.navigate('BlockedUsers'))}
+          {renderSectionButton('Blocked Users', () => navigation.navigate('BlockedUsers'))}
         </View>
 
         <Spacer height={24} />
@@ -143,9 +132,9 @@ export default function Me() {
           <Text style={styles.sectionTitle}>More</Text>
           {renderSectionButton('App Settings', () => {})}
           {renderSectionButton('Feedback', () => {})}
-          {renderSectionButton('Contact', () => {})}
-          {renderSectionButton('Terms of Service', () => {})}
-          {renderSectionButton('Privacy Policy', () => {})}
+          {renderSectionButton('Contact', () => navigation.navigate('Contact'))}
+          {renderSectionButton('Terms of Service', () => navigation.navigate('TermsOfService'))}
+          {renderSectionButton('Privacy Policy', () => navigation.navigate('PrivacyPolicy'))}
         </View>
 
         <Spacer height={24} />
@@ -158,6 +147,11 @@ export default function Me() {
         </Button>
 
         <Spacer height={24} />
+
+        <Text style={styles.copyright}>© {new Date().getFullYear()} Crushy Social Inc</Text>
+        {/* <Text style={styles.version}>{version}</Text> */}
+
+        <Spacer height={24} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -165,8 +159,8 @@ export default function Me() {
 
 const styles = StyleSheet.create({
   profileSection: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 8,
     backgroundColor: Colors.light.white,
     borderRadius: 8,
@@ -181,12 +175,12 @@ const styles = StyleSheet.create({
   },
   profileName: {
     fontSize: 20,
-    fontFamily: "HeadingBold",
+    fontFamily: 'HeadingBold',
     color: Colors.light.text,
   },
   membershipType: {
     fontSize: 16,
-    fontFamily: "BodyBold",
+    fontFamily: 'BodyBold',
     color: Colors.light.accent,
   },
   section: {
@@ -196,9 +190,9 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 14,
-    fontFamily: "BodyBold",
+    fontFamily: 'BodyBold',
     color: Colors.light.textSecondary,
-    textTransform: "uppercase",
+    textTransform: 'uppercase',
   },
   sectionButton: {
     paddingVertical: 12,
@@ -207,7 +201,19 @@ const styles = StyleSheet.create({
   },
   sectionButtonText: {
     fontSize: 16,
-    fontFamily: "BodyBold",
+    fontFamily: 'BodyBold',
     color: Colors.light.text,
+  },
+  copyright: {
+    textAlign: 'center',
+    fontSize: 12,
+    fontFamily: 'BodyRegular',
+    color: Colors.light.textSecondary,
+  },
+  version: {
+    textAlign: 'center',
+    fontSize: 12,
+    fontFamily: 'BodyRegular',
+    color: Colors.light.textSecondary,
   },
 });
