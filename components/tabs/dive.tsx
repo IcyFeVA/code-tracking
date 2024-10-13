@@ -174,8 +174,8 @@ const Dive = () => {
 
   // Update image URL when current match changes
   useEffect(() => {
-    if (currentMatch?.avatar_pixelated_url) {
-      setImageUrl(currentMatch.avatar_pixelated_url);
+    if (currentMatch?.avatar_url) {
+      setImageUrl(currentMatch.avatar_url);
     } else {
       setImageUrl(DEFAULT_IMAGE);
     }

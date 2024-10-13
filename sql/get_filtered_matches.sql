@@ -26,7 +26,7 @@ BEGIN
         p.name AS name,
         p.age AS age,
         p.gender AS gender,
-        p.avatar_url AS avatar_url,
+        CASE WHEN get_filtered_matches.looking_for = 3 THEN p.avatar_url ELSE p.avatar_pixelated_url END AS avatar_url,
         p.interests AS interests
     FROM profiles_test p
     LEFT JOIN profile_details pd ON p.id = pd.id
@@ -60,7 +60,7 @@ BEGIN
             p.name AS name,
             p.age AS age,
             p.gender AS gender,
-            p.avatar_url AS avatar_url,
+            CASE WHEN get_filtered_matches.looking_for = 3 THEN p.avatar_url ELSE p.avatar_pixelated_url END AS avatar_url,
             p.interests AS interests
         FROM profiles_test p
         LEFT JOIN profile_details pd ON p.id = pd.id
