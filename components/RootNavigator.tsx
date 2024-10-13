@@ -21,6 +21,7 @@ import SearchFilters from '@/components/pages/searchFilters';
 import Auth from '@/components/pages/Auth';
 import Onboarding from '@/components/pages/Onboarding';
 import SurfDetails from '@/components/pages/SurfDetails';
+import UserProfile from '@/components/pages/UserProfile';
 import BlockedUsers from '@/components/pages/BlockedUsers';
 import FilterInterests from '@/components/pages/searchFilters/filterInterests';
 import FilterGenderPreference from '@/components/pages/searchFilters/filterGenderPreference';
@@ -271,6 +272,7 @@ function RootNavigator({ session }: RootNavigatorProps) {
         <Stack.Screen name="TermsOfService" component={TermsOfService} />
         <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicy} />
         <Stack.Screen name="Contact" component={Contact} />
+        <Stack.Screen name="UserProfile" component={UserProfile} />
       </Stack.Group>
     </Stack.Navigator>
   );

@@ -164,7 +164,7 @@ export default function Inbox() {
           },
           last_message: conversation.last_message || '',
           last_message_at: conversation.last_message_at || '',
-          looking_for: match?.looking_for || 0,
+          looking_for: match?.looking_for || 0, // when matched, both users have to select the same looking_for value
           matched_at: match?.matched_at || '',
           match_id: match?.id || '',
           blocked_by: match?.blocked_by || null,

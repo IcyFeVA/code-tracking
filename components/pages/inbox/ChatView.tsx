@@ -53,7 +53,7 @@ export function Menu() {
       <DropdownMenuContent>
         <DropdownMenuItem
           key="profile"
-          onSelect={() => navigation.navigate('SurfDetails', { userId: user2_id, looking_for })}>
+          onSelect={() => navigation.navigate('UserProfile', { userId: user2_id, looking_for })}>
           <DropdownMenuItemTitle>View Profile</DropdownMenuItemTitle>
         </DropdownMenuItem>
 
