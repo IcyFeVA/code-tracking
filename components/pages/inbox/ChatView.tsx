@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/Dropdown';
 import { Ionicons } from '@expo/vector-icons';
 import { defaultStyles } from '@/constants/Styles';
+import { useNotifications } from '@/contexts/NotificationContext';
 
 export function Menu() {
   const navigation = useNavigation();
@@ -73,13 +74,18 @@ const ChatView = () => {
   const [messages, setMessages] = useState<MessageType.Any[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [editingMessageId, setEditingMessageId] = useState<string | null>(null); // New state for editing
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const { user } = useAuth();
   const route = useRoute();
   const navigation = useNavigation();
-  const { user2_name } = route.params;
-  const { conversationId } = route.params;
-  // const conversationId = '8223b0c8-937e-4d4f-98bc-0c2031204a74';
+  const { user2_name, conversationId, user2_id } = route.params;
+  const { clearNotificationsForConversation } = useNotifications();
+
+  useEffect(() => {
+    if (conversationId) {
+      clearNotificationsForConversation(conversationId);
+    }
+  }, [conversationId, clearNotificationsForConversation]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -220,6 +226,7 @@ const ChatView = () => {
         const { error } = await supabase.from('messages').insert({
           conversation_id: conversationId,
           sender_id: user.id,
+          recipient_id: user2_id, // Now user2_id is properly defined
           content: message.text,
         });
 

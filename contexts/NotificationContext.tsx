@@ -14,6 +14,8 @@ interface NotificationContextType {
   newMatches: number;
   unreadMessages: number;
   resetNotifications: () => void;
+  clearNotificationsForConversation: (conversationId: string) => void;
+  updateUnreadMessageCount: () => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(
@@ -92,11 +94,53 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({
     setTotalNotifications(0);
   };
 
+  const clearNotificationsForConversation = async (conversationId: string) => {
+    if (!session?.user?.id) return;
+
+    try {
+      // Clear unread messages for this conversation
+      const { error } = await supabase
+        .from('messages')
+        .update({ read: true })
+        .eq('conversation_id', conversationId)
+        .eq('recipient_id', session.user.id)
+        .eq('read', false);
+
+      if (error) throw error;
+
+      // Fetch the current unread message count
+      await updateUnreadMessageCount();
+    } catch (error) {
+      console.error('Error clearing notifications:', error);
+    }
+  };
+
+  const updateUnreadMessageCount = async () => {
+    if (!session?.user?.id) return;
+
+    try {
+      const { count, error } = await supabase
+        .from('messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('recipient_id', session.user.id)
+        .eq('read', false);
+
+      if (error) throw error;
+
+      setUnreadMessages(count || 0);
+      setTotalNotifications((prev) => (prev - unreadMessages) + (count || 0));
+    } catch (error) {
+      console.error('Error updating unread message count:', error);
+    }
+  };
+
   const value = {
     totalNotifications,
     newMatches,
     unreadMessages,
     resetNotifications,
+    clearNotificationsForConversation,
+    updateUnreadMessageCount,
   };
 
   return (
