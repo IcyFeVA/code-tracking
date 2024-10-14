@@ -87,19 +87,28 @@ export default function Inbox() {
   // This effect runs once when the component mounts
   useEffect(() => {
     loadConversations();
-  }, [loadConversations]);
 
-  // This effect runs every time the screen comes into focus
-  useFocusEffect(
-    useCallback(() => {
-      loadConversations();
-    }, [loadConversations])
-  );
+    if (session?.user?.id) {
+      const subscription = supabase
+        .channel('conversations')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'messages',
+        }, () => {
+          loadConversations();
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(subscription);
+      };
+    }
+  }, [loadConversations, session?.user?.id]);
 
   const fetchConversations = async () => {
     setIsLoading(true);
     try {
-      // First, fetch the matches for the current user
       const { data: matchesData, error: matchesError } = await supabase
         .from('matches')
         .select('id, user1_id, user2_id, looking_for, matched_at, blocked_by')
@@ -111,23 +120,15 @@ export default function Inbox() {
 
       if (matchesError) throw matchesError;
 
-      // Now fetch the conversations based on the ids from matches
       const conversationIds = matchesData.map((match) => match.id);
       const { data: conversationsData, error: conversationsError } = await supabase
         .from('conversations')
-        .select(
-          `
-          id,
-          last_message,
-          last_message_at
-        `
-        )
+        .select('id, last_message, last_message_at')
         .in('id', conversationIds)
         .order('last_message_at', { ascending: false });
 
       if (conversationsError) throw conversationsError;
 
-      // Fetch profiles for user2_ids or user1_ids if user2_id is the current user
       const user2Ids = matchesData.map((match) => match.user2_id === session?.user?.id ? match.user1_id : match.user2_id);
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles_test')
@@ -136,7 +137,6 @@ export default function Inbox() {
 
       if (profilesError) throw profilesError;
 
-      // Fetch unread message counts for each conversation
       const { data: unreadMessages, error: unreadMessagesError } = await supabase
         .from('messages')
         .select('conversation_id, id')
@@ -145,13 +145,11 @@ export default function Inbox() {
 
       if (unreadMessagesError) throw unreadMessagesError;
 
-      // Count unread messages for each conversation
       const unreadCounts = unreadMessages.reduce((acc, message) => {
         acc[message.conversation_id] = (acc[message.conversation_id] || 0) + 1;
         return acc;
       }, {});
 
-      // Combine the data
       const transformedData: Conversation[] = conversationsData.map((conversation) => {
         const match = matchesData.find((m) => m.id === conversation.id);
         const profile = profilesData.find((p) => p.id === (match.user2_id === session?.user?.id ? match.user1_id : match.user2_id));
