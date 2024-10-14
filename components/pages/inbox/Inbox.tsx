@@ -46,21 +46,8 @@ type Conversation = {
 
 export function Menu() {
   const navigation = useNavigation();
-  const session = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const route = useRoute();
-  const { match_id, user2_id, looking_for } = route.params;
-
-  async function blockUser(): Promise<void> {
-    const { data: matchesData, error: matchesError } = await supabase
-      .from('matches')
-      .update({ blocked_by: session?.user?.id })
-      .eq('id', match_id);
-
-    if (matchesError) throw matchesError;
-
-    navigation.goBack();
-  }
 
   return (
     <DropdownMenuRoot open={isOpen} onOpenChange={setIsOpen}>
@@ -114,7 +101,7 @@ export default function Inbox() {
       // First, fetch the matches for the current user
       const { data: matchesData, error: matchesError } = await supabase
         .from('matches')
-        .select('id, user2_id, looking_for, matched_at, blocked_by')
+        .select('id, user1_id, user2_id, looking_for, matched_at, blocked_by')
         .or(`user1_id.eq.${session?.user?.id},user2_id.eq.${session?.user?.id}`)
         .not('matched_at', 'is', null)
         .is('blocked_by', null)
@@ -139,8 +126,8 @@ export default function Inbox() {
 
       if (conversationsError) throw conversationsError;
 
-      // Fetch profiles for user2_ids
-      const user2Ids = matchesData.map((match) => match.user2_id);
+      // Fetch profiles for user2_ids or user1_ids if user2_id is the current user
+      const user2Ids = matchesData.map((match) => match.user2_id === session?.user?.id ? match.user1_id : match.user2_id);
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles_test')
         .select('id, name, avatar_url, avatar_pixelated_url')
@@ -151,13 +138,13 @@ export default function Inbox() {
       // Combine the data
       const transformedData: Conversation[] = conversationsData.map((conversation) => {
         const match = matchesData.find((m) => m.id === conversation.id);
-        const profile = profilesData.find((p) => p.id === match?.user2_id);
+        const profile = profilesData.find((p) => p.id === match.user2_id === session?.user?.id ? match.user1_id : match.user2_id);
 
         return {
           id: conversation.id,
-          user2_id: match?.user2_id || '',
+          user2_id: match.user2_id === session?.user?.id ? match.user1_id : match.user2_id,
           profiles: {
-            user_id: match?.user2_id || '',
+            user_id: match.user2_id === session?.user?.id ? match.user1_id : match.user2_id,
             name: profile?.name || '',
             avatar_url: profile?.avatar_url || '',
             avatar_pixelated_url: profile?.avatar_pixelated_url || '',

@@ -87,7 +87,7 @@ export const usePotentialMatches = () => {
         user_id: session.user.id,
         limit_count: 10,
         looking_for: 1,
-        smoking_status_filter : 2,
+        // smoking_status_filter : 2,
         // drinking_status_filter : 2,
       });
       if (error) {
