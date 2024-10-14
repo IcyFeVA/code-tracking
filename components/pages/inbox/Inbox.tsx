@@ -70,7 +70,6 @@ export function Menu() {
 export default function Inbox() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const navigation = useNavigation();
   const session = useAuth();
 
@@ -80,15 +79,13 @@ export default function Inbox() {
       fetchConversations();
     } else {
       setIsAuthenticated(false);
-      setIsLoading(false);
     }
   }, [session]);
 
-  // This effect runs once when the component mounts
   useEffect(() => {
-    loadConversations();
-
     if (session?.user?.id) {
+      fetchConversations();
+
       const subscription = supabase
         .channel('conversations')
         .on('postgres_changes', {
@@ -96,7 +93,7 @@ export default function Inbox() {
           schema: 'public',
           table: 'messages',
         }, () => {
-          loadConversations();
+          fetchConversations();
         })
         .subscribe();
 
@@ -104,15 +101,19 @@ export default function Inbox() {
         supabase.removeChannel(subscription);
       };
     }
-  }, [loadConversations, session?.user?.id]);
+  }, [session?.user?.id]);
 
   const fetchConversations = async () => {
-    setIsLoading(true);
+    if (!session?.user?.id) {
+      console.log('User session not available');
+      return;
+    }
+
     try {
       const { data: matchesData, error: matchesError } = await supabase
         .from('matches')
         .select('id, user1_id, user2_id, looking_for, matched_at, blocked_by')
-        .or(`user1_id.eq.${session?.user?.id},user2_id.eq.${session?.user?.id}`)
+        .or(`user1_id.eq.${session.user.id},user2_id.eq.${session.user.id}`)
         .not('matched_at', 'is', null)
         .is('blocked_by', null)
         .eq('user1_action', 1)
@@ -150,7 +151,7 @@ export default function Inbox() {
         return acc;
       }, {});
 
-      const transformedData: Conversation[] = conversationsData.map((conversation) => {
+      const updatedData: Conversation[] = conversationsData.map((conversation) => {
         const match = matchesData.find((m) => m.id === conversation.id);
         const profile = profilesData.find((p) => p.id === (match.user2_id === session?.user?.id ? match.user1_id : match.user2_id));
         const unreadCount = unreadCounts[conversation.id] || 0;
@@ -174,11 +175,20 @@ export default function Inbox() {
         };
       });
 
-      setConversations(transformedData);
+      setConversations((prevConversations) => {
+        const newConversations = [...prevConversations];
+        updatedData.forEach((updatedConversation) => {
+          const index = newConversations.findIndex((conv) => conv.id === updatedConversation.id);
+          if (index !== -1) {
+            newConversations[index] = updatedConversation;
+          } else {
+            newConversations.push(updatedConversation);
+          }
+        });
+        return newConversations.sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime());
+      });
     } catch (error) {
       console.error('Error fetching conversations:', error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -253,15 +263,7 @@ export default function Inbox() {
     );
   };
 
-  if (isLoading) {
-    return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.light.primary} />
-      </SafeAreaView>
-    );
-  }
-
-  if (!isAuthenticated) {
+  if (!session?.user?.id) {
     return (
       <SafeAreaView style={styles.emptyContainer}>
         <Text style={styles.emptyText}>You need to log in to view conversations.</Text>
