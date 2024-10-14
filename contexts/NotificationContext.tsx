@@ -55,7 +55,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({
           event: "INSERT",
           schema: "public",
           table: "matches",
-          filter: `user2_id=eq.${session.user.id}`,
+          filter: `user2_id=eq.${session.user.id} AND user1_action=eq.1 AND user2_action=eq.1`,
         },
         (payload) => {
           setNewMatches((prev) => prev + 1);

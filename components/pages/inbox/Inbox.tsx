@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Image,
   Pressable,
+  RefreshControl,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -26,6 +27,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/Dropdown';
 import { Ionicons } from '@expo/vector-icons';
+import { debounce } from 'lodash';
 
 type Conversation = {
   id: string;
@@ -72,6 +74,7 @@ export default function Inbox() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigation = useNavigation();
   const session = useAuth();
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadConversations = useCallback(() => {
     if (session?.user?.id) {
@@ -82,10 +85,24 @@ export default function Inbox() {
     }
   }, [session]);
 
+  const debouncedFetchConversations = useCallback(
+    debounce(() => {
+      if (session?.user?.id) {
+        fetchConversations();
+      }
+    }, 300),
+    [session?.user?.id]
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      debouncedFetchConversations();
+      return () => debouncedFetchConversations.cancel();
+    }, [debouncedFetchConversations])
+  );
+
   useEffect(() => {
     if (session?.user?.id) {
-      fetchConversations();
-
       const subscription = supabase
         .channel('conversations')
         .on('postgres_changes', {
@@ -97,8 +114,14 @@ export default function Inbox() {
         })
         .subscribe();
 
+      // Set up interval for checking new matches/conversations
+      const intervalId = setInterval(() => {
+        fetchNewConversations();
+      }, 2 * 60 * 1000); // 2 minutes in milliseconds
+
       return () => {
         supabase.removeChannel(subscription);
+        clearInterval(intervalId); // Clear the interval when component unmounts
       };
     }
   }, [session?.user?.id]);
@@ -191,6 +214,93 @@ export default function Inbox() {
       console.error('Error fetching conversations:', error);
     }
   };
+
+  const fetchNewConversations = async () => {
+    if (!session?.user?.id) return;
+
+    try {
+      const lastConversationDate = conversations.length > 0 
+        ? new Date(conversations[0].matched_at) 
+        : new Date(0);
+
+      const { data: newMatchesData, error: newMatchesError } = await supabase
+        .from('matches')
+        .select('id, user1_id, user2_id, looking_for, matched_at, blocked_by')
+        .or(`user1_id.eq.${session.user.id},user2_id.eq.${session.user.id}`)
+        .not('matched_at', 'is', null)
+        .is('blocked_by', null)
+        .eq('user1_action', 1)
+        .eq('user2_action', 1)
+        .gt('matched_at', lastConversationDate.toISOString());
+
+      if (newMatchesError) throw newMatchesError;
+
+      if (newMatchesData.length === 0) return; // No new matches
+
+      const newConversationIds = newMatchesData.map((match) => match.id);
+      const { data: newConversationsData, error: newConversationsError } = await supabase
+        .from('conversations')
+        .select('id, last_message, last_message_at')
+        .in('id', newConversationIds)
+        .order('last_message_at', { ascending: false });
+
+      if (newConversationsError) throw newConversationsError;
+
+      const newUser2Ids = newMatchesData.map((match) => match.user2_id === session.user.id ? match.user1_id : match.user2_id);
+      const { data: newProfilesData, error: newProfilesError } = await supabase
+        .from('profiles_test')
+        .select('id, name, avatar_url, avatar_pixelated_url')
+        .in('id', newUser2Ids);
+
+      if (newProfilesError) throw newProfilesError;
+
+      const newConversations: Conversation[] = newConversationsData.map((conversation) => {
+        const match = newMatchesData.find((m) => m.id === conversation.id);
+        const profile = newProfilesData.find((p) => p.id === (match.user2_id === session.user.id ? match.user1_id : match.user2_id));
+
+        return {
+          id: conversation.id,
+          user2_id: match.user2_id === session.user.id ? match.user1_id : match.user2_id,
+          profiles: {
+            user_id: match.user2_id === session.user.id ? match.user1_id : match.user2_id,
+            name: profile?.name || '',
+            avatar_url: profile?.avatar_url || '',
+            avatar_pixelated_url: profile?.avatar_pixelated_url || '',
+          },
+          last_message: conversation.last_message || '',
+          last_message_at: conversation.last_message_at || '',
+          looking_for: match?.looking_for || 0,
+          matched_at: match?.matched_at || '',
+          match_id: match?.id || '',
+          blocked_by: match?.blocked_by || null,
+          unread_count: 0,
+        };
+      });
+
+      setConversations((prevConversations) => {
+        const updatedConversations = [...prevConversations];
+        newConversations.forEach((newConv) => {
+          const existingIndex = updatedConversations.findIndex((conv) => conv.id === newConv.id);
+          if (existingIndex !== -1) {
+            // Update existing conversation
+            updatedConversations[existingIndex] = newConv;
+          } else {
+            // Add new conversation
+            updatedConversations.push(newConv);
+          }
+        });
+        return updatedConversations.sort((a, b) => new Date(b.matched_at).getTime() - new Date(a.matched_at).getTime());
+      });
+    } catch (error) {
+      console.error('Error fetching new conversations:', error);
+    }
+  };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchNewConversations();
+    setRefreshing(false);
+  }, []);
 
   const renderConversationItem = ({ item }: { item: Conversation }) => {
     const avatarSource =
@@ -295,6 +405,9 @@ export default function Inbox() {
             keyExtractor={(item) => item.id}
             renderItem={renderConversationItem}
             contentContainerStyle={styles.listContent}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
           />
         )}
       </View>
