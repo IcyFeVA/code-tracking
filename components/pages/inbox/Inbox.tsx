@@ -42,6 +42,7 @@ type Conversation = {
   match_id: string;
   matched_at: string;
   blocked_by: string | null;
+  unread_count: number; // Add this new field
 };
 
 export function Menu() {
@@ -135,10 +136,26 @@ export default function Inbox() {
 
       if (profilesError) throw profilesError;
 
+      // Fetch unread message counts for each conversation
+      const { data: unreadMessages, error: unreadMessagesError } = await supabase
+        .from('messages')
+        .select('conversation_id, id')
+        .eq('recipient_id', session?.user?.id)
+        .eq('read', false);
+
+      if (unreadMessagesError) throw unreadMessagesError;
+
+      // Count unread messages for each conversation
+      const unreadCounts = unreadMessages.reduce((acc, message) => {
+        acc[message.conversation_id] = (acc[message.conversation_id] || 0) + 1;
+        return acc;
+      }, {});
+
       // Combine the data
       const transformedData: Conversation[] = conversationsData.map((conversation) => {
         const match = matchesData.find((m) => m.id === conversation.id);
-        const profile = profilesData.find((p) => p.id === match.user2_id === session?.user?.id ? match.user1_id : match.user2_id);
+        const profile = profilesData.find((p) => p.id === (match.user2_id === session?.user?.id ? match.user1_id : match.user2_id));
+        const unreadCount = unreadCounts[conversation.id] || 0;
 
         return {
           id: conversation.id,
@@ -151,13 +168,14 @@ export default function Inbox() {
           },
           last_message: conversation.last_message || '',
           last_message_at: conversation.last_message_at || '',
-          looking_for: match?.looking_for || 0, // when matched, both users have to select the same looking_for value
+          looking_for: match?.looking_for || 0,
           matched_at: match?.matched_at || '',
           match_id: match?.id || '',
           blocked_by: match?.blocked_by || null,
+          unread_count: unreadCount,
         };
       });
-      // console.log(transformedData);
+
       setConversations(transformedData);
     } catch (error) {
       console.error('Error fetching conversations:', error);
@@ -228,12 +246,11 @@ export default function Inbox() {
             {item.last_message}
           </Text>
         </View>
-        {/* <Text style={styles.time}>
-          {isToday(new Date(item.last_message_at)) ? new Date(item.last_message_at).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }) : formattedDate}
-        </Text> */}
+        {item.unread_count > 0 && (
+          <View style={styles.unreadIndicator}>
+            <Text style={styles.unreadCount}>{item.unread_count}</Text>
+          </View>
+        )}
       </TouchableOpacity>
     );
   };
@@ -286,7 +303,6 @@ export default function Inbox() {
 }
 
 const styles = StyleSheet.create({
-
   conversationItem: {
     flexDirection: "row",
     padding: 16,
@@ -358,5 +374,21 @@ const styles = StyleSheet.create({
     color: Colors.light.white,
     fontWeight: "bold",
     fontSize: 12,
+  },
+  unreadIndicator: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: Colors.light.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    top: 10,
+    right: 10,
+  },
+  unreadCount: {
+    color: Colors.light.white,
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });
