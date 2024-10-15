@@ -122,6 +122,34 @@ export default function Avatar({ url, size = 70, onUpload }: Props) {
     }
   }
 
+  async function resizeImage(uri: string, maxDimension: number = 1080) {
+    // Get the original image dimensions
+    const { width, height } = await new Promise((resolve, reject) => {
+      Image.getSize(
+        uri,
+        (width, height) => resolve({ width, height }),
+        (error) => reject(error)
+      );
+    });
+
+    // Calculate the new dimensions
+    let newWidth, newHeight;
+    if (width > height) {
+      newWidth = maxDimension;
+      newHeight = Math.round((height / width) * maxDimension);
+    } else {
+      newHeight = maxDimension;
+      newWidth = Math.round((width / height) * maxDimension);
+    }
+
+    const result = await ImageManipulator.manipulateAsync(
+      uri,
+      [{ resize: { width: newWidth, height: newHeight } }],
+      { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
+    );
+    return result.uri;
+  }
+
   async function uploadAvatar() {
     try {
       setUploading(true);
@@ -130,7 +158,7 @@ export default function Avatar({ url, size = 70, onUpload }: Props) {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsMultipleSelection: false,
         allowsEditing: true,
-        quality: 0.5,
+        quality: 1, // Use max quality, we'll compress later
         exif: false,
       });
 
@@ -146,13 +174,16 @@ export default function Avatar({ url, size = 70, onUpload }: Props) {
         throw new Error("No image uri!");
       }
 
-      // Read the file as base64
-      const base64 = await FileSystem.readAsStringAsync(image.uri, {
+      // Resize the original image
+      const resizedUri = await resizeImage(image.uri);
+
+      // Read the resized file as base64
+      const base64 = await FileSystem.readAsStringAsync(resizedUri, {
         encoding: FileSystem.EncodingType.Base64,
       });
       console.log("Base64 length:", base64.length);
 
-      // Upload original image
+      // Upload resized image
       const originalPath = `${Date.now()}_original.jpg`;
       const { data: originalData, error: originalError } =
         await supabase.storage
@@ -169,7 +200,7 @@ export default function Avatar({ url, size = 70, onUpload }: Props) {
       console.log("Original upload successful:", originalData);
 
       // Create and upload pixelated version
-      const pixelatedUri = await pixelateImage(image.uri, 15); // 15x15 pixel blocks for a very pixelated effect
+      const pixelatedUri = await pixelateImage(resizedUri, 15);
       const pixelatedBase64 = await FileSystem.readAsStringAsync(pixelatedUri, {
         encoding: FileSystem.EncodingType.Base64,
       });

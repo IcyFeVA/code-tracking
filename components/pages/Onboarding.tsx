@@ -928,6 +928,34 @@ const StepPhoto = () => {
     }
   }
 
+  async function resizeImage(uri: string, maxDimension: number = 1080) {
+    // Get the original image dimensions
+    const { width, height } = await new Promise((resolve, reject) => {
+      Image.getSize(
+        uri,
+        (width, height) => resolve({ width, height }),
+        (error) => reject(error)
+      );
+    });
+
+    // Calculate the new dimensions
+    let newWidth, newHeight;
+    if (width > height) {
+      newWidth = maxDimension;
+      newHeight = Math.round((height / width) * maxDimension);
+    } else {
+      newHeight = maxDimension;
+      newWidth = Math.round((width / height) * maxDimension);
+    }
+
+    const result = await ImageManipulator.manipulateAsync(
+      uri,
+      [{ resize: { width: newWidth, height: newHeight } }],
+      { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
+    );
+    return result.uri;
+  }
+
   const handleUpload = async () => {
     try {
       setIsLoading(true);
@@ -936,7 +964,7 @@ const StepPhoto = () => {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsMultipleSelection: false,
         allowsEditing: true,
-        quality: 0.5,
+        quality: 1,
         exif: false,
       });
 
@@ -948,16 +976,20 @@ const StepPhoto = () => {
       const uri = result.assets[0].uri;
       console.log("Image picked:", uri);
 
-      // Read the file as base64
-      const base64 = await FileSystem.readAsStringAsync(uri, {
+      // Resize the image
+      const resizedUri = await resizeImage(uri);
+      console.log("Image resized:", resizedUri);
+
+      // Read the resized file as base64
+      const base64 = await FileSystem.readAsStringAsync(resizedUri, {
         encoding: FileSystem.EncodingType.Base64,
       });
       if (!base64) {
-        throw new Error("Failed to read image file");
+        throw new Error("Failed to read resized image file");
       }
-      console.log("Image read as base64");
+      console.log("Resized image read as base64");
 
-      // Upload original image
+      // Upload resized image
       const originalPath = `${Date.now()}_original.jpg`;
       const { data: originalData, error: originalError } =
         await supabase.storage
@@ -967,10 +999,10 @@ const StepPhoto = () => {
           });
 
       if (originalError) throw originalError;
-      console.log("Original image uploaded");
+      console.log("Resized image uploaded");
 
       // Create and upload pixelated version
-      const pixelatedUri = await pixelateImage(uri, 15);
+      const pixelatedUri = await pixelateImage(resizedUri, 15);
       const pixelatedBase64 = await FileSystem.readAsStringAsync(pixelatedUri, {
         encoding: FileSystem.EncodingType.Base64,
       });
@@ -998,7 +1030,6 @@ const StepPhoto = () => {
         .from("avatars")
         .getPublicUrl(pixelatedData.path).data.publicUrl;
 
-      // Update this part
       console.log("Original URL:", originalUrl);
       console.log("Pixelated URL:", pixelatedUrl);
 
