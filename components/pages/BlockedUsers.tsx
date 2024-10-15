@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useFocusEffect, useRoute } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import {
   View,
   StyleSheet,
@@ -8,15 +8,14 @@ import {
   Text,
   ActivityIndicator,
   Image,
-  Pressable,
+  Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/Colors';
 import { defaultStyles } from '@/constants/Styles';
-import { formatDistanceToNow, isToday, format } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import Spacer from '@/components/Spacer';
 
 type Conversation = {
@@ -68,10 +67,11 @@ export default function BlockedUsers() {
   const fetchConversations = async () => {
     setIsLoading(true);
     try {
-      // First, fetch the matches for the current user
+      // Fetch matches where the current user has blocked someone
       const { data: matchesData, error: matchesError } = await supabase
         .from('matches')
-        .select('id, user2_id, matched_at')
+        .select('id, user1_id, user2_id, blocked_by, matched_at')
+        .or(`user1_id.eq.${session?.user?.id},user2_id.eq.${session?.user?.id}`)
         .eq('blocked_by', session?.user?.id);
 
       if (matchesError) throw matchesError;
@@ -92,38 +92,45 @@ export default function BlockedUsers() {
 
       if (conversationsError) throw conversationsError;
 
-      // Fetch profiles for user2_ids
-      const user2Ids = matchesData.map((match) => match.user2_id);
+      // Fetch profiles for the other users (not the current user)
+      const otherUserIds = matchesData.map((match) =>
+        match.user1_id === session?.user?.id ? match.user2_id : match.user1_id
+      );
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles_test')
         .select('id, name, avatar_url, avatar_pixelated_url')
-        .in('id', user2Ids);
+        .in('id', otherUserIds);
 
       if (profilesError) throw profilesError;
 
       // Combine the data
-      const transformedData: Conversation[] = conversationsData.map((conversation) => {
-        const match = matchesData.find((m) => m.id === conversation.id);
-        const profile = profilesData.find((p) => p.id === match?.user2_id);
+      const transformedData: Conversation[] = matchesData.map((match) => {
+        const conversation = conversationsData.find((c) => c.id === match.id) || {
+          last_message: '',
+          last_message_at: '',
+        };
+        const profile = profilesData.find(
+          (p) => p.id === (match.user1_id === session?.user?.id ? match.user2_id : match.user1_id)
+        );
 
         return {
-          id: conversation.id,
-          user2_id: match?.user2_id || '',
+          id: match.id,
+          user2_id: match.user1_id === session?.user?.id ? match.user2_id : match.user1_id,
           profiles: {
-            user_id: match?.user2_id || '',
+            user_id: profile?.id || '',
             name: profile?.name || '',
             avatar_url: profile?.avatar_url || '',
             avatar_pixelated_url: profile?.avatar_pixelated_url || '',
           },
-          last_message: conversation.last_message || '',
-          last_message_at: conversation.last_message_at || '',
-          looking_for: match?.looking_for || 0,
-          matched_at: match?.matched_at || '',
-          match_id: match?.id || '',
-          blocked_by: match?.blocked_by || null,
+          last_message: conversation.last_message,
+          last_message_at: conversation.last_message_at,
+          looking_for: 0, // You might want to add this to the matches table if it's needed
+          matched_at: match.matched_at || '',
+          match_id: match.id,
+          blocked_by: match.blocked_by,
         };
       });
-      // console.log(transformedData);
+
       setConversations(transformedData);
     } catch (error) {
       console.error('Error fetching conversations:', error);
@@ -132,15 +139,37 @@ export default function BlockedUsers() {
     }
   };
 
-  async function unblockUser(match_id: string): Promise<void> {
-    const { data: matchesData, error: matchesError } = await supabase
-      .from('matches')
-      .update({ blocked_by: null })
-      .eq('id', match_id);
+  async function unblockUser(match_id: string, userName: string): Promise<void> {
+    Alert.alert('Unblock User', `Are you sure you want to unblock ${userName}?`, [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Unblock',
+        onPress: async () => {
+          try {
+            const { error: matchesError } = await supabase
+              .from('matches')
+              .update({ blocked_by: null })
+              .eq('id', match_id);
 
-    if (matchesError) throw matchesError;
+            if (matchesError) throw matchesError;
 
-    navigation.goBack();
+            // Remove the unblocked user from the local state
+            setConversations((prevConversations) =>
+              prevConversations.filter((conv) => conv.match_id !== match_id)
+            );
+
+            // Show a success message
+            // Alert.alert('Success', `${userName} has been unblocked.`);
+          } catch (error) {
+            console.error('Error unblocking user:', error);
+            Alert.alert('Error', 'Failed to unblock user. Please try again.');
+          }
+        },
+      },
+    ]);
   }
 
   const renderConversationItem = ({ item }: { item: Conversation }) => {
@@ -154,7 +183,7 @@ export default function BlockedUsers() {
     return (
       <TouchableOpacity
         style={styles.conversationItem}
-        onPress={async () => unblockUser(item.match_id)}>
+        onPress={() => unblockUser(item.match_id, item.profiles.name)}>
         <Image source={avatarSource} style={styles.avatar} />
         <View style={styles.userInfo}>
           <Text style={styles.userName}>{item.profiles.name}</Text>
@@ -167,34 +196,6 @@ export default function BlockedUsers() {
             <Text style={styles.time}>{formattedDate}</Text>
           </View>
         </View>
-      </TouchableOpacity>
-    );
-
-    return (
-      <TouchableOpacity
-        style={styles.conversationItem}
-        onPress={() =>
-          navigation.navigate('ChatView', {
-            conversationId: item.id,
-            user2_name: item.profiles.name,
-            user2_id: item.user2_id,
-            looking_for: item.looking_for,
-            match_id: item.match_id,
-          })
-        }>
-        <Image source={avatarSource} style={styles.avatar} />
-        <View style={styles.userInfo}>
-          <Text style={styles.userName}>{item.profiles.name}</Text>
-          <Text style={styles.lastMessage} numberOfLines={1}>
-            {item.last_message}
-          </Text>
-        </View>
-        {/* <Text style={styles.time}>
-          {isToday(new Date(item.last_message_at)) ? new Date(item.last_message_at).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          }) : formattedDate}
-        </Text> */}
       </TouchableOpacity>
     );
   };

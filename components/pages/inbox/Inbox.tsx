@@ -105,23 +105,30 @@ export default function Inbox() {
     if (session?.user?.id) {
       const subscription = supabase
         .channel('conversations')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'messages',
-        }, () => {
-          fetchConversations();
-        })
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'messages',
+          },
+          () => {
+            fetchConversations();
+          }
+        )
         .subscribe();
 
       // Set up interval for checking new matches/conversations
-      const intervalId = setInterval(() => {
-        fetchNewConversations();
-      }, 2 * 60 * 1000); // 2 minutes in milliseconds
+      const intervalId = setInterval(
+        () => {
+          fetchNewConversations();
+        },
+        2 * 60 * 1000
+      ); // 2 minutes in milliseconds
 
       return () => {
         supabase.removeChannel(subscription);
-        clearInterval(intervalId); // Clear the interval when component unmounts
+        clearInterval(intervalId);
       };
     }
   }, [session?.user?.id]);
@@ -153,7 +160,9 @@ export default function Inbox() {
 
       if (conversationsError) throw conversationsError;
 
-      const user2Ids = matchesData.map((match) => match.user2_id === session?.user?.id ? match.user1_id : match.user2_id);
+      const user2Ids = matchesData.map((match) =>
+        match.user2_id === session?.user?.id ? match.user1_id : match.user2_id
+      );
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles_test')
         .select('id, name, avatar_url, avatar_pixelated_url')
@@ -176,7 +185,9 @@ export default function Inbox() {
 
       const updatedData: Conversation[] = conversationsData.map((conversation) => {
         const match = matchesData.find((m) => m.id === conversation.id);
-        const profile = profilesData.find((p) => p.id === (match.user2_id === session?.user?.id ? match.user1_id : match.user2_id));
+        const profile = profilesData.find(
+          (p) => p.id === (match.user2_id === session?.user?.id ? match.user1_id : match.user2_id)
+        );
         const unreadCount = unreadCounts[conversation.id] || 0;
 
         return {
@@ -208,7 +219,12 @@ export default function Inbox() {
             newConversations.push(updatedConversation);
           }
         });
-        return newConversations.sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime());
+        // Filter out any conversations that are no longer in the matchesData
+        return newConversations
+          .filter((conv) => matchesData.some((match) => match.id === conv.match_id))
+          .sort(
+            (a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime()
+          );
       });
     } catch (error) {
       console.error('Error fetching conversations:', error);

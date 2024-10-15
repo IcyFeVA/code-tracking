@@ -33,14 +33,35 @@ export function Menu() {
   const { match_id, user2_id, looking_for } = route.params;
 
   async function blockUser(): Promise<void> {
-    const { data: matchesData, error: matchesError } = await supabase
-      .from('matches')
-      .update({ blocked_by: session?.user?.id })
-      .eq('id', match_id);
+    Alert.alert(
+      'Block User',
+      'Are you sure you want to block this user?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Block',
+          onPress: async () => {
+            try {
+              const { error: matchesError } = await supabase
+                .from('matches')
+                .update({ blocked_by: session?.user?.id })
+                .eq('id', match_id);
 
-    if (matchesError) throw matchesError;
+              if (matchesError) throw matchesError;
 
-    navigation.goBack();
+              navigation.goBack();
+            } catch (error) {
+              console.error('Error blocking user:', error);
+              Alert.alert('Error', 'Failed to block user. Please try again.');
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
   }
 
   return (
