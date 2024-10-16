@@ -36,45 +36,42 @@ import { Colors } from "@/constants/Colors";
 export default function Auth({ onboarding }: any) {
   const { colorScheme, setColorScheme } = useColorScheme();
 
-  const [mode, setMode] = useState("welcome");
-  const [email, setEmail] = useState("android@mail.com");
-  const [password, setPassword] = useState("Marsmx23!");
+  const [mode, setMode] = useState('welcome');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{6,}$/;
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const onboardingContent = [
     {
       id: 1,
-      title: "Step 1",
-      description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-      image: require("@/assets/images/onboarding/onboarding1.png"),
+      title: 'Step 1',
+      description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+      image: require('@/assets/images/onboarding/onboarding1.png'),
     },
     {
       id: 2,
-      title: "Step 2",
-      description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-      image: require("@/assets/images/onboarding/onboarding2.png"),
+      title: 'Step 2',
+      description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+      image: require('@/assets/images/onboarding/onboarding2.png'),
     },
     {
       id: 3,
-      title: "Step 3",
-      description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-      image: require("@/assets/images/onboarding/onboarding3.png"),
+      title: 'Step 3',
+      description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+      image: require('@/assets/images/onboarding/onboarding3.png'),
     },
     {
       id: 4,
-      title: "Step 4",
-      description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-      image: require("@/assets/images/onboarding/onboarding4.png"),
+      title: 'Step 4',
+      description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+      image: require('@/assets/images/onboarding/onboarding4.png'),
     },
     {
       id: 5,
-      title: "Step 5",
-      description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-      image: require("@/assets/images/onboarding/onboarding5.png"),
+      title: 'Step 5',
+      description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+      image: require('@/assets/images/onboarding/onboarding5.png'),
     },
   ];
 
@@ -107,15 +104,11 @@ export default function Auth({ onboarding }: any) {
         {Array(count)
           .fill(0)
           .map((_, index) => {
-            const inputRange = [
-              (index - 1) * width,
-              index * width,
-              (index + 1) * width,
-            ];
+            const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
             const dotColor = scrollX.interpolate({
               inputRange,
-              outputRange: ["#cccccc", "#7A37D0", "#cccccc"],
-              extrapolate: "clamp",
+              outputRange: ['#cccccc', '#7A37D0', '#cccccc'],
+              extrapolate: 'clamp',
             });
             return (
               <Animated.View
@@ -129,72 +122,62 @@ export default function Auth({ onboarding }: any) {
     );
   };
 
-  // TODO: make email lowercase
-  async function signInWithEmail() {
-    if (!emailRegex.test(email)) {
-      Alert.alert("Invalid email format");
-      return;
-    }
-    if (!passwordRegex.test(password)) {
-      Alert.alert(
-        "Password must be at least 6 characters long, contain one capital letter, and include both letters and numbers"
-      );
+  async function signInWithPhone() {
+    if (!isValidPhoneNumber(phoneNumber)) {
+      Alert.alert('Error', 'Invalid phone number');
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email,
-      password: password,
-    });
-
-    if (error) Alert.alert(error.message);
-    setLoading(false);
-  }
-
-  async function signUpWithEmail() {
-    if (!emailRegex.test(email)) {
-      Alert.alert("Invalid email format");
-      return;
-    }
-    if (!passwordRegex.test(password)) {
-      Alert.alert(
-        "Password",
-        "Password is too easy to guess. Please use a stronger password. See below for requirements."
-      );
-      return;
-    }
-    setLoading(true);
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.signUp({
-      email: email,
-      password: password,
+    const { data, error } = await supabase.auth.signInWithOtp({
+      phone: phoneNumber,
     });
 
     if (error) {
-      Alert.alert(error.message);
-      console.log(error.message);
-    }
-    //if (!session) Alert.alert('Please check your inbox for email verification!')
-    setLoading(false);
-
-    if (session) {
-      // User is logged in
-      console.log("User is logged in:", session.user);
+      Alert.alert('Error', error.message);
+      console.log('Error', error.message);
     } else {
-      //Alert.alert('Please check your inbox for email verification!');
+      setIsVerifying(true);
     }
+    setLoading(false);
   }
 
-  const [keyboardStatus, setKeyboardStatus] = useState("");
+  async function verifyPhoneNumber() {
+    if (verificationCode.length !== 6) {
+      Alert.alert('Invalid code', 'Please enter a 6-digit code');
+      return;
+    }
+    setLoading(true);
+    const { data, error } = await supabase.auth.verifyOtp({
+      phone: phoneNumber,
+      token: verificationCode,
+      type: 'sms',
+    });
+
+    if (error) {
+      Alert.alert('Error', error.message);
+    } else {
+      // User is now signed in
+      console.log('User signed in successfully', data);
+      // You can redirect the user or update the UI here
+    }
+    setLoading(false);
+  }
+
+  function isValidPhoneNumber(phone: string): boolean {
+    // This regex pattern allows for various phone number formats
+    // It's a basic validation and might need to be adjusted based on your specific requirements
+    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+    return phoneRegex.test(phone);
+  }
+
+  const [keyboardStatus, setKeyboardStatus] = useState('');
 
   useEffect(() => {
-    const showSubscription = Keyboard.addListener("keyboardDidShow", () => {
-      setKeyboardStatus("Keyboard Shown");
+    const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
+      setKeyboardStatus('Keyboard Shown');
     });
-    const hideSubscription = Keyboard.addListener("keyboardDidHide", () => {
-      setKeyboardStatus("Keyboard Hidden");
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardStatus('Keyboard Hidden');
     });
 
     return () => {
@@ -205,168 +188,145 @@ export default function Auth({ onboarding }: any) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.light.background }}>
-      {mode === "signin" && (
+      {mode === 'signin' && (
         <Pageview className="flex justify-space-between h-full">
           <View className="flex-1">
             <Text className="text-3xl font-bold">Hello again!</Text>
 
             <Spacer height={64} />
 
-            <Text className="text-sm font-bold">E-Mail</Text>
+            <Text className="text-sm font-bold">Phone Number</Text>
             <Spacer height={4} />
-            <Textfield onChangeText={(text) => setEmail(text)} />
+            <Textfield
+              onChangeText={(text) => setPhoneNumber(text)}
+              placeholder="+1 (555) 555-5555"
+              keyboardType="phone-pad"
+            />
 
             <Spacer height={16} />
 
-            <Text className="text-sm font-bold">Password</Text>
-            <Spacer height={4} />
-            <View className="flex-row items-center relative">
-              <Textfield
-                secureTextEntry={true}
-                onChangeText={(text) => setPassword(text)}
-              />
-            </View>
+            {isVerifying && (
+              <>
+                <Text className="text-sm font-bold">Verification Code</Text>
+                <Spacer height={4} />
+                <Textfield
+                  onChangeText={(text) => setVerificationCode(text)}
+                  placeholder="Enter 6-digit code"
+                  keyboardType="number-pad"
+                  maxLength={6}
+                />
+              </>
+            )}
 
             <Spacer height={64} />
 
             <Button
-              onPress={() => signInWithEmail()}
-              style={[defaultStyles.button, defaultStyles.buttonShadow]}
-            >
-              <Text style={defaultStyles.buttonLabel}>Sign in</Text>
+              onPress={isVerifying ? verifyPhoneNumber : signInWithPhone}
+              style={[defaultStyles.button, defaultStyles.buttonShadow]}>
+              <Text style={defaultStyles.buttonLabel}>
+                {isVerifying ? 'Verify Code' : 'Sign in'}
+              </Text>
             </Button>
 
             <Spacer height={32} />
 
             <TouchableOpacity className="ml-4 mt-3" onPress={() => {}}>
-              <Text className="text-center text-primary-500">
-                Forgot password?
-              </Text>
+              <Text className="text-center text-primary-500">Forgot password?</Text>
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity
-            className={
-              keyboardStatus === "Keyboard Shown" ? "hidden" : "ml-4 mt-3"
-            }
-            onPress={() => setMode("signup")}
-          >
+            className={keyboardStatus === 'Keyboard Shown' ? 'hidden' : 'ml-4 mt-3'}
+            onPress={() => setMode('signup')}>
             <Text className="text-center">
-              New here?{" "}
-              <Text className="text-primary-500">Create an account</Text>
+              New here? <Text className="text-primary-500">Create an account</Text>
             </Text>
           </TouchableOpacity>
 
           <Spacer height={16} />
 
           <TouchableOpacity
-            className={
-              keyboardStatus === "Keyboard Shown" ? "hidden" : "ml-4 mt-3"
-            }
-            onPress={() => setMode("welcome")}
-          >
-            <Text className="text-center text-primary-500">
-              Back to welcome screen
-            </Text>
+            className={keyboardStatus === 'Keyboard Shown' ? 'hidden' : 'ml-4 mt-3'}
+            onPress={() => setMode('welcome')}>
+            <Text className="text-center text-primary-500">Back to welcome screen</Text>
           </TouchableOpacity>
         </Pageview>
       )}
 
-      {mode === "signup" && (
+      {mode === 'signup' && (
         <Pageview className="flex justify-space-between h-full">
           <View className="flex-1">
             <Text className="text-3xl font-bold">Welcome!</Text>
 
             <Spacer height={64} />
 
-            <Text className="text-sm font-bold">E-Mail</Text>
+            <Text className="text-sm font-bold">Phone Number</Text>
             <Spacer height={4} />
-            <Textfield onChangeText={(text) => setEmail(text)} />
+            <Textfield
+              onChangeText={(text) => setPhoneNumber(text)}
+              placeholder="+1 (555) 555-5555"
+              keyboardType="phone-pad"
+            />
 
             <Spacer height={16} />
 
-            <Text className="text-sm font-bold">Password</Text>
-            <Spacer height={4} />
-            <View className="flex flex-row items-center justify-between">
-              <Textfield
-                className="flex-1"
-                secureTextEntry={!showPassword}
-                onChangeText={(text) => setPassword(text)}
-              />
-              <TouchableOpacity
-                className="flex-none ml-4"
-                onPress={() => setShowPassword(!showPassword)}
-              >
-                <Ionicons
-                  name={showPassword ? "eye-off" : "eye"}
-                  size={24}
-                  color="gray"
+            {isVerifying && (
+              <>
+                <Text className="text-sm font-bold">Verification Code</Text>
+                <Spacer height={4} />
+                <Textfield
+                  onChangeText={(text) => setVerificationCode(text)}
+                  placeholder="Enter 6-digit code"
+                  keyboardType="number-pad"
+                  maxLength={6}
                 />
-              </TouchableOpacity>
-            </View>
-
-            <Spacer height={8} />
-
-            <Text className="text-gray-500 leading-5">
-              Minimum 6 characters, and one each: uppercase/lowercase letter,
-              number, special character.
-            </Text>
+              </>
+            )}
 
             <Spacer height={48} />
 
             <Button
-              onPress={() => signUpWithEmail()}
-              style={[defaultStyles.button, defaultStyles.buttonShadow]}
-            >
-              <Text style={defaultStyles.buttonLabel}>Sign up</Text>
+              onPress={isVerifying ? verifyPhoneNumber : signInWithPhone}
+              style={[defaultStyles.button, defaultStyles.buttonShadow]}>
+              <Text style={defaultStyles.buttonLabel}>
+                {isVerifying ? 'Verify Code' : 'Sign up'}
+              </Text>
             </Button>
 
             <Spacer height={16} />
 
             <Text className="leading-5">
-              By signing up, you agree to our{" "}
-              <Text className="text-primary-500">Terms of Service</Text> and{" "}
+              By signing up, you agree to our{' '}
+              <Text className="text-primary-500">Terms of Service</Text> and{' '}
               <Text className="text-primary-500">Privacy Policy</Text>.
             </Text>
           </View>
 
           <TouchableOpacity
-            className={
-              keyboardStatus === "Keyboard Shown" ? "hidden" : "ml-4 mt-3"
-            }
-            onPress={() => setMode("signin")}
-          >
+            className={keyboardStatus === 'Keyboard Shown' ? 'hidden' : 'ml-4 mt-3'}
+            onPress={() => setMode('signin')}>
             <Text className="text-center">
-              Already have an account?{" "}
-              <Text className="text-primary-500">Sign in</Text>
+              Already have an account? <Text className="text-primary-500">Sign in</Text>
             </Text>
           </TouchableOpacity>
 
           <Spacer height={16} />
 
           <TouchableOpacity
-            className={
-              keyboardStatus === "Keyboard Shown" ? "hidden" : "ml-4 mt-3"
-            }
-            onPress={() => setMode("welcome")}
-          >
-            <Text className="text-center text-primary-500">
-              Back to welcome screen
-            </Text>
+            className={keyboardStatus === 'Keyboard Shown' ? 'hidden' : 'ml-4 mt-3'}
+            onPress={() => setMode('welcome')}>
+            <Text className="text-center text-primary-500">Back to welcome screen</Text>
           </TouchableOpacity>
 
           <Spacer height={16} />
         </Pageview>
       )}
 
-      {mode === "welcome" && (
+      {mode === 'welcome' && (
         <View className="flex h-full justify-between">
           <View className="flex">
             <Spacer height={16} />
-            <Image
-              source={require("@/assets/images/logo/logo_crushy.png")}
-              className="m-auto"
-            />
+            <Image source={require('@/assets/images/logo/logo_crushy.png')} className="m-auto" />
             <FlatList
               data={onboardingContent}
               renderItem={renderItem}
@@ -375,31 +335,25 @@ export default function Auth({ onboarding }: any) {
               showsHorizontalScrollIndicator={false}
               pagingEnabled
               bounces={false}
-              onScroll={Animated.event(
-                [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-                { useNativeDriver: false }
-              )}
+              onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
+                useNativeDriver: false,
+              })}
             />
             <Pagination count={onboardingContent.length} />
             <Spacer height={64} />
           </View>
           <View className="flex p-6">
             <Button
-              onPress={() => setMode("signup")}
-              style={[defaultStyles.button, defaultStyles.buttonShadow]}
-            >
+              onPress={() => setMode('signup')}
+              style={[defaultStyles.button, defaultStyles.buttonShadow]}>
               <Text style={defaultStyles.buttonLabel}>Create account</Text>
             </Button>
 
             <Spacer height={16} />
 
             <Button
-              onPress={() => setMode("signin")}
-              style={[
-                defaultStyles.buttonSecondary,
-                defaultStyles.buttonShadow,
-              ]}
-            >
+              onPress={() => setMode('signin')}
+              style={[defaultStyles.buttonSecondary, defaultStyles.buttonShadow]}>
               <Text style={defaultStyles.buttonSecondaryLabel}>Sign in</Text>
             </Button>
           </View>
