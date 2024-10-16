@@ -84,7 +84,7 @@ function TabNavigator() {
   const handleExploreTabPress = async () => {
     const lookingFor = await getData('lookingFor');
     setTimeout(() => {
-      navigation.navigate(lookingFor === 3 ? 'Surf' : 'Dive', { lookingFor });
+      navigation.navigate(parseInt(lookingFor) === 3 ? 'Surf' : 'Dive', { lookingFor });
     }, 100);
   };
 
