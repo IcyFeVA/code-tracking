@@ -159,17 +159,59 @@ export default function Auth({ onboarding }: any) {
     }
     setLoading(true);
     const e164PhoneNumber = getE164PhoneNumber(phoneNumber);
-    const { data, error } = await supabase.auth.signInWithOtp({
-      phone: e164PhoneNumber,
-    });
+    console.log('Sending phone number:', e164PhoneNumber);
 
-    if (error) {
-      Alert.alert('Error', error.message);
-      console.log('Error', error.message);
-    } else {
+    try {
+      if (mode === 'signup') {
+        // Attempt to sign up
+        const { data, error } = await supabase.auth.signUp({
+          phone: e164PhoneNumber,
+          password: generateRandomPassword(),
+        });
+
+        if (error && error.message.includes('User already registered')) {
+          Alert.alert(
+            'Account Exists',
+            'An account with this phone number already exists. Would you like to go to the sign in page instead?',
+            [
+              {
+                text: 'Cancel',
+                style: 'cancel'
+              },
+              {
+                text: 'Go to Page',
+                onPress: () => {
+                  setMode('signin');
+                }
+              }
+            ]
+          );
+          setLoading(false);
+          return;
+        } else if (error) {
+          throw error;
+        }
+      }
+
+      // Proceed with OTP sending (for both signin and successful signup)
+      const { error } = await supabase.auth.signInWithOtp({
+        phone: e164PhoneNumber,
+      });
+
+      if (error) throw error;
+
+      console.log('OTP sent successfully');
       setIsVerifying(true);
+    } catch (error) {
+      console.error('Error:', error);
+      Alert.alert('Error', error.message || 'Failed to process request');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
+  }
+
+  function generateRandomPassword() {
+    return Math.random().toString(36).slice(-8);
   }
 
   async function verifyPhoneNumber() {

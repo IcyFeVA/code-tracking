@@ -123,7 +123,7 @@ const EditBio = () => {
             ref={richText}
             initialContentHTML={bio}
             onChange={setBio}
-            placeholder="Write your bio here. Tip: Write about your hobbies, interests, and what you're looking for in a relationship."
+            placeholder="Write your bio here. Tip: Don't keep it short. Write about you, who you are, and what you're looking for."
             style={[styles.richEditor, { height: editorHeight }]}
             initialHeight={200}
             onHeightChange={setEditorHeight}
