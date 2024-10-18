@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Keyboard,
   StatusBar,
+  TextInput,
 } from "react-native";
 import { supabase } from "@/lib/supabase";
 import { Button, Text } from "react-native-ui-lib";
@@ -122,14 +123,44 @@ export default function Auth({ onboarding }: any) {
     );
   };
 
+  function formatPhoneNumber(input: string): string {
+    // Remove all non-digit characters
+    const digitsOnly = input.replace(/\D/g, '');
+    
+    // Format the number
+    if (digitsOnly.length <= 3) {
+      return digitsOnly;
+    } else if (digitsOnly.length <= 6) {
+      return `(${digitsOnly.slice(0, 3)}) ${digitsOnly.slice(3)}`;
+    } else {
+      return `(${digitsOnly.slice(0, 3)}) ${digitsOnly.slice(3, 6)}-${digitsOnly.slice(6, 10)}`;
+    }
+  }
+
+  function handlePhoneChange(text: string) {
+    const formattedNumber = formatPhoneNumber(text);
+    setPhoneNumber(`+1${formattedNumber}`);
+  }
+
+  function isValidPhoneNumber(phone: string): boolean {
+    const phoneRegex = /^\+1\(\d{3}\)\s\d{3}-\d{4}$/;
+    return phoneRegex.test(phone);
+  }
+
+  function getE164PhoneNumber(phone: string): string {
+    // Remove all non-digit characters and ensure it starts with +1
+    return '+1' + phone.replace(/\D/g, '').slice(-10);
+  }
+
   async function signInWithPhone() {
     if (!isValidPhoneNumber(phoneNumber)) {
       Alert.alert('Error', 'Invalid phone number');
       return;
     }
     setLoading(true);
+    const e164PhoneNumber = getE164PhoneNumber(phoneNumber);
     const { data, error } = await supabase.auth.signInWithOtp({
-      phone: phoneNumber,
+      phone: e164PhoneNumber,
     });
 
     if (error) {
@@ -147,27 +178,22 @@ export default function Auth({ onboarding }: any) {
       return;
     }
     setLoading(true);
+    console.log('Verifying phone number:', phoneNumber);
     const { data, error } = await supabase.auth.verifyOtp({
-      phone: phoneNumber,
+      phone: getE164PhoneNumber(phoneNumber),
       token: verificationCode,
       type: 'sms',
     });
 
     if (error) {
       Alert.alert('Error', error.message);
+      console.log('Error', error.message);
     } else {
       // User is now signed in
       console.log('User signed in successfully', data);
       // You can redirect the user or update the UI here
     }
     setLoading(false);
-  }
-
-  function isValidPhoneNumber(phone: string): boolean {
-    // This regex pattern allows for various phone number formats
-    // It's a basic validation and might need to be adjusted based on your specific requirements
-    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-    return phoneRegex.test(phone);
   }
 
   const [keyboardStatus, setKeyboardStatus] = useState('');
@@ -197,11 +223,20 @@ export default function Auth({ onboarding }: any) {
 
             <Text className="text-sm font-bold">Phone Number</Text>
             <Spacer height={4} />
-            <Textfield
-              onChangeText={(text) => setPhoneNumber(text)}
-              placeholder="+1 (555) 555-5555"
-              keyboardType="phone-pad"
-            />
+            <View className="flex-row items-center">
+              <View className="bg-gray-200 px-3 py-2 rounded-l-md h-12">
+                <Text className="text-lg">+1</Text>
+              </View>
+              <Textfield
+                className="flex-1"
+                style={[styles.phoneInput, { borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }]  }
+                onChangeText={handlePhoneChange}
+                value={phoneNumber.slice(2)}
+                placeholder="(555) 555-5555"
+                keyboardType="phone-pad"
+                maxLength={14}  // (123) 456-7890
+              />
+            </View>
 
             <Spacer height={16} />
 
@@ -262,11 +297,20 @@ export default function Auth({ onboarding }: any) {
 
             <Text className="text-sm font-bold">Phone Number</Text>
             <Spacer height={4} />
-            <Textfield
-              onChangeText={(text) => setPhoneNumber(text)}
-              placeholder="+1 (555) 555-5555"
-              keyboardType="phone-pad"
-            />
+            <View className="flex-row items-center">
+              <View className="bg-gray-200 px-3 py-2 rounded-l-md h-12">
+                <Text className="text-lg">+1</Text>
+              </View>
+              <Textfield
+                className="flex-1"
+                style={[styles.phoneInput, { borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }]  }
+                onChangeText={handlePhoneChange}
+                value={phoneNumber.slice(2)}
+                placeholder="(555) 555-5555"
+                keyboardType="phone-pad"
+                maxLength={14}  // (123) 456-7890
+              />
+            </View>
 
             <Spacer height={16} />
 
@@ -365,7 +409,9 @@ export default function Auth({ onboarding }: any) {
 }
 
 const styles = StyleSheet.create({
-  passwordInput: {
-    flex: 1,
+  phoneInput: {
+    fontSize: 16,
+    paddingVertical: 0,
+    textAlignVertical: 'center',
   },
 });
