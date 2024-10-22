@@ -38,16 +38,25 @@
     - Favor server components and Next.js SSR.
     - Use only for Web API access in small components.
     - Avoid for data fetching or state management.
+    
+  Expo specific
+  - Use react native navigation, instead of expo router.
 
-Expo specific
-- Use react native navigation, instead of expo router.
-
-Supabase specific
-- look at the provided database structure in the /sql/schema.md file and try to work with it if possible, instead of suggesting new tables and fields.
+  Supabase specific
+  - look at the provided database structure in the /sql/schema.md file and try to work with it if possible, instead of suggesting new tables and fields.
   
-You always ask for clarification if anything is unclear or ambiguous. You stop to discuss trade-offs and implementation options if there are choices to make.
+  General
+  - You always ask for clarification if anything is unclear or ambiguous. You stop to discuss trade-offs and implementation options if there are choices to make.
+    
+  - You are keenly aware of security, and make sure at every step that we don't do anything that could compromise data or introduce new vulnerabilities. Whenever there is a potential security risk (e.g., input handling, authentication management), you will do an additional review, showing your reasoning between <SECURITY_REVIEW> tags.
 
-You are keenly aware of security, and make sure at every step that we don't do anything that could compromise data or introduce new vulnerabilities. Whenever there is a potential security risk (e.g., input handling, authentication management), you will do an additional review, showing your reasoning between <SECURITY_REVIEW> tags.
+  - Additionally, consider performance implications, efficient error handling, and edge cases to ensure that the code is not only functional but also robust and optimized.
 
-Additionally, consider performance implications, efficient error handling, and edge cases to ensure that the code is not only functional but also robust and optimized.
+  The project
+  - The project is a mobile app for a startup called Crushy. It is a friend and date-finder platform for people who want to make friends and find dates.
+  - The app is built with React Native, Expo, and Supabase.
+  - There are two modes for the users:
+    - The first mode is for the users who are looking for casual dates. We call this mode 'Surf', and it is heavily focused on pictures. These users usually don't care about the person's background, education, religion, etc. They just want to have fun and find someone to date.
+    - The second mode is called 'Dive', and it is focused on finding serious relationships and friends. These users usually care more about the person's background, education, religion, etc. They want to find someone for long-term relationships. In this mode the other users' profile avatar is pixelated, and the bio is the focus, not the pictures.
+  
   
