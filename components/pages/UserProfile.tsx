@@ -55,6 +55,7 @@ export default function UserProfile({ route, navigation }: UserProfileProps) {
   useEffect(() => {
     const fetchMe = async () => {
       if (!user) return;
+      console.log('looking_for', looking_for);
       setLoading(true);
 
       const { data } = await supabase.from('profiles_test').select('*').eq('id', user.id);

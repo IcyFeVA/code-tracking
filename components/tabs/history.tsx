@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, FlatList, TouchableOpacity, Image, StyleSheet } from "react-native";
+import React, { useState, useCallback } from "react";
+import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "@/lib/supabase";
 import { defaultStyles } from "@/constants/Styles";
@@ -23,11 +23,7 @@ export default function History() {
   const [isLoading, setIsLoading] = useState(true);
   const navigation = useNavigation();
 
-  useEffect(() => {
-    fetchHistoryItems();
-  }, []);
-
-  async function fetchHistoryItems() {
+  const fetchHistoryItems = useCallback(async () => {
     setIsLoading(true);
     try {
       const { data: currentUser, error: userError } = await supabase.auth.getUser();
@@ -67,13 +63,18 @@ export default function History() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchHistoryItems();
+    }, [fetchHistoryItems])
+  );
 
   function renderHistoryItem({ item }: { item: HistoryItem }) {
     const avatarSource = item.interactionMode === 3
       ? { uri: item.otherUserAvatar }
       : { uri: item.otherUserPixelatedAvatar };
-
 
     return (
       <TouchableOpacity
