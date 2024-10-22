@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet } from "react-native";
+import { View, Text, SectionList, TouchableOpacity, Image, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,8 +18,13 @@ interface HistoryItem {
   interactionMode: number;
 }
 
+interface SectionData {
+  title: string;
+  data: HistoryItem[];
+}
+
 export default function History() {
-  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
+  const [historyItems, setHistoryItems] = useState<SectionData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const navigation = useNavigation();
 
@@ -44,7 +49,7 @@ export default function History() {
 
       if (error) throw error;
 
-      const formattedData: HistoryItem[] = data.map(item => ({
+      const formattedData: HistoryItem[] = data ? data.map(item => ({
         id: item.id,
         otherUserId: item.other_user_id,
         otherUserName: item.profiles_test.name,
@@ -54,11 +59,13 @@ export default function History() {
         isLiked: item.is_liked,
         interactionDate: item.interaction_date,
         interactionMode: item.interaction_mode,
-      }));
+      })) : [];
 
-      setHistoryItems(formattedData);
+      const groupedData = groupHistoryItemsByDate(formattedData);
+      setHistoryItems(groupedData);
     } catch (error) {
       console.error("Error fetching history items:", error);
+      setHistoryItems([]); // Set to empty array in case of error
       // TODO: Handle error (e.g., show error message to user)
     } finally {
       setIsLoading(false);
@@ -71,17 +78,41 @@ export default function History() {
     }, [fetchHistoryItems])
   );
 
+  function groupHistoryItemsByDate(items: HistoryItem[]): SectionData[] {
+    const grouped: { [key: string]: HistoryItem[] } = {};
+    const now = new Date();
+
+    items.forEach(item => {
+      const date = new Date(item.interactionDate);
+      const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 3600 * 24));
+
+      let key: string;
+      if (diffDays === 0) key = "Today";
+      else if (diffDays === 1) key = "Yesterday";
+      else if (diffDays < 7) key = "This Week";
+      else if (diffDays < 30) key = "This Month";
+      else key = "Older";
+
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(item);
+    });
+
+    return Object.entries(grouped).map(([title, data]) => ({ title, data }));
+  }
+
   function renderHistoryItem({ item }: { item: HistoryItem }) {
     const avatarSource = item.interactionMode === 3
       ? { uri: item.otherUserAvatar }
       : { uri: item.otherUserPixelatedAvatar };
+
+    const lookingFor = item.interactionMode === 3 ? 'surf' : 'dive';
 
     return (
       <TouchableOpacity
         style={styles.historyItem}
         onPress={() => navigation.navigate('UserProfile', { 
           userId: item.otherUserId,
-          looking_for: item.interactionMode
+          looking_for: lookingFor
         })}
       >
         <Image source={avatarSource} style={styles.avatar} />
@@ -98,6 +129,14 @@ export default function History() {
     );
   }
 
+  function renderSectionHeader({ section: { title } }: { section: SectionData }) {
+    return (
+      <View style={defaultStyles.section}>
+        <Text style={defaultStyles.sectionTitle}>{title}</Text>
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView style={defaultStyles.SafeAreaView}>
       <View style={defaultStyles.pageHeader}>
@@ -108,9 +147,10 @@ export default function History() {
           <Text>Loading...</Text>
         </View>
       ) : (
-        <FlatList
-          data={historyItems}
+        <SectionList
+          sections={historyItems}
           renderItem={renderHistoryItem}
+          renderSectionHeader={renderSectionHeader}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContainer}
         />
@@ -121,13 +161,12 @@ export default function History() {
 
 const styles = StyleSheet.create({
   listContainer: {
-    padding: 16,
+    paddingVertical: 16,
   },
   historyItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
-    borderBottomWidth: 1,
+    padding: 16,
     borderBottomColor: '#e0e0e0',
   },
   avatar: {
@@ -151,5 +190,15 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  sectionHeader: {
+    backgroundColor: '#f0f0f0',
+    padding: 8,
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  sectionHeaderText: {
+    fontSize: 14,
+    fontWeight: 'bold',
   },
 });

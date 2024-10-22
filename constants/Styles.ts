@@ -163,5 +163,16 @@ export const defaultStyles = StyleSheet.create({
         fontSize: 16,
         fontFamily: 'BodySemiBold',
         color: Colors.light.primary
-    }
+    },
+    section: {
+        backgroundColor: Colors.light.white,
+        borderRadius: 8,
+        padding: 8,
+      },
+    sectionTitle: {
+        fontSize: 14,
+        fontFamily: 'BodyBold',
+        color: Colors.light.textSecondary,
+        textTransform: 'uppercase',
+      },
 });
