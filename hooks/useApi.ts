@@ -128,5 +128,31 @@ export const usePotentialMatches = () => {
     }
   }, [session]);
 
-  return { matches, loading, error, fetchMatches, fetchFilteredMatches, recordAction };
+  const createInteraction = async (otherUserId: string, action: string, mode: number) => {
+    const { data: currentUser, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+
+    const { data, error } = await supabase
+      .from('interactions')
+      .insert({
+        user_id: currentUser.user.id,
+        other_user_id: otherUserId,
+        is_liked: action === 'like' ? 1 : 0,
+        interaction_mode: mode
+      })
+      .select();
+
+    if (error) throw error;
+    return data[0];
+  };
+
+  return {
+    matches,
+    loading,
+    error,
+    fetchMatches,
+    fetchFilteredMatches,
+    recordAction,
+    createInteraction,
+  };
 };

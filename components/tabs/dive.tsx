@@ -125,6 +125,7 @@ const Dive = () => {
     error: matchesError,
     fetchFilteredMatches,
     recordAction,
+    createInteraction, // Add this
   } = usePotentialMatches();
 
   const {
@@ -204,6 +205,9 @@ const Dive = () => {
       scrollToTop();
 
       try {
+        // Create interaction
+        await createInteraction(currentMatch.id, action, 2); // 2 for Dive mode
+
         const isNewMatch = await recordAction(currentMatch.id, action);
 
         if (action === ACTION_LIKE && isNewMatch) {
@@ -223,7 +227,7 @@ const Dive = () => {
         );
       }
     },
-    [session, currentMatch, recordAction, moveToNextMatch, scrollToTop]
+    [session, currentMatch, recordAction, moveToNextMatch, scrollToTop, createInteraction]
   );
 
   // Memoize sorted interests at the top level to adhere to Rules of Hooks

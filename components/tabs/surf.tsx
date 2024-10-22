@@ -45,6 +45,7 @@ const Surf = () => {
     error,
     fetchMatches,
     recordAction,
+    createInteraction, // Add this
   } = usePotentialMatches();
 
   const { currentUserProfile, fetchCurrentUserProfile } = useProfile();
@@ -82,6 +83,9 @@ const Surf = () => {
       if (!session?.user?.id || !currentMatch) return;
 
       try {
+        // Create interaction
+        await createInteraction(currentMatch.id, action, 3); // 3 for Surf mode
+
         const isNewMatch = await recordAction(currentMatch.id, action);
 
         if (action === "like" && isNewMatch) {
@@ -95,9 +99,10 @@ const Surf = () => {
         }
       } catch (err) {
         console.error("Error in handleAction:", err);
+        Alert.alert("Error", "An error occurred. Please try again.");
       }
     },
-    [session, currentMatch, recordAction, moveToNextMatch]
+    [session, currentMatch, recordAction, moveToNextMatch, createInteraction]
   );
 
   const handleLike = useCallback(() => handleAction("like"), [handleAction]);
