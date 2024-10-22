@@ -85,6 +85,21 @@ getPotentialDiveMatches: async (userId: string, limit: number) => {
     }
   },
 
+  checkExistingMatch: async (userId: string, matchedUserId: string) => {
+    const { data, error } = await supabase
+      .from('matches')
+      .select('*')
+      .or(`and(user1_id.eq.${userId},user2_id.eq.${matchedUserId}),and(user1_id.eq.${matchedUserId},user2_id.eq.${userId})`)
+      .single();
+  
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error checking existing match:', error);
+      throw error;
+    }
+  
+    return data;
+  },
+
   getOrCreateConversation: async (user1Id: string, user2Id: string) => {
     const { data, error } = await supabase.rpc('get_or_create_conversation', {
       user1_id: user1Id,
@@ -172,3 +187,5 @@ getPotentialDiveMatches: async (userId: string, limit: number) => {
   
 
 };
+
+

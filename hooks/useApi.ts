@@ -132,18 +132,41 @@ export const usePotentialMatches = () => {
     const { data: currentUser, error: userError } = await supabase.auth.getUser();
     if (userError) throw userError;
 
-    const { data, error } = await supabase
+    const { data: existingInteraction, error: fetchError } = await supabase
       .from('interactions')
-      .insert({
-        user_id: currentUser.user.id,
-        other_user_id: otherUserId,
-        is_liked: action === 'like' ? 1 : 0,
-        interaction_mode: mode
-      })
-      .select();
+      .select()
+      .eq('user_id', currentUser.user.id)
+      .eq('other_user_id', otherUserId)
+      .single();
 
-    if (error) throw error;
-    return data[0];
+    if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
+
+    if (existingInteraction) {
+      const { data, error } = await supabase
+        .from('interactions')
+        .update({
+          is_liked: action === 'like' ? 1 : 0,
+          interaction_mode: mode
+        })
+        .eq('id', existingInteraction.id)
+        .select();
+
+      if (error) throw error;
+      return data[0];
+    } else {
+      const { data, error } = await supabase
+        .from('interactions')
+        .insert({
+          user_id: currentUser.user.id,
+          other_user_id: otherUserId,
+          is_liked: action === 'like' ? 1 : 0,
+          interaction_mode: mode
+        })
+        .select();
+
+      if (error) throw error;
+      return data[0];
+    }
   };
 
   return {
