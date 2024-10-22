@@ -12,6 +12,7 @@ interface HistoryItem {
   otherUserName: string;
   otherUserAge: number;
   otherUserAvatar: string;
+  otherUserPixelatedAvatar: string;
   isLiked: number;
   interactionDate: string;
   interactionMode: number;
@@ -32,8 +33,6 @@ export default function History() {
       const { data: currentUser, error: userError } = await supabase.auth.getUser();
       if (userError) throw userError;
 
-      console.log("currentUser", currentUser.user.id);
-
       const { data, error } = await supabase
         .from('interactions')
         .select(`
@@ -42,7 +41,7 @@ export default function History() {
           is_liked,
           interaction_date,
           interaction_mode,
-          profiles_test:other_user_id (name, age, avatar_url)
+          profiles_test:other_user_id (name, age, avatar_url, avatar_pixelated_url)
         `)
         .eq('user_id', currentUser.user.id)
         .order('interaction_date', { ascending: false });
@@ -55,6 +54,7 @@ export default function History() {
         otherUserName: item.profiles_test.name,
         otherUserAge: item.profiles_test.age,
         otherUserAvatar: item.profiles_test.avatar_url,
+        otherUserPixelatedAvatar: item.profiles_test.avatar_pixelated_url,
         isLiked: item.is_liked,
         interactionDate: item.interaction_date,
         interactionMode: item.interaction_mode,
@@ -70,9 +70,9 @@ export default function History() {
   }
 
   function renderHistoryItem({ item }: { item: HistoryItem }) {
-    const avatarSource = item.interactionMode === 'dive'
-      ? { uri: `https://api.dicebear.com/6.x/pixel-art/png?seed=${item.otherUserId}` }
-      : { uri: item.otherUserAvatar };
+    const avatarSource = item.interactionMode === 3
+      ? { uri: item.otherUserAvatar }
+      : { uri: item.otherUserPixelatedAvatar };
 
     return (
       <TouchableOpacity
