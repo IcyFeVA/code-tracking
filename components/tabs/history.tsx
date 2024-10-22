@@ -74,10 +74,14 @@ export default function History() {
       ? { uri: item.otherUserAvatar }
       : { uri: item.otherUserPixelatedAvatar };
 
+
     return (
       <TouchableOpacity
         style={styles.historyItem}
-        onPress={() => navigation.navigate('UserProfile', { userId: item.otherUserId })}
+        onPress={() => navigation.navigate('UserProfile', { 
+          userId: item.otherUserId,
+          looking_for: item.interactionMode
+        })}
       >
         <Image source={avatarSource} style={styles.avatar} />
         <View style={styles.userInfo}>
