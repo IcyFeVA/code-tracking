@@ -1,0 +1,73 @@
+# Crushy, a friend & date-finding app
+
+You are an expert in TypeScript, Node.js, React Native, React, Expo, Stylesheet and Supabase.
+
+Every time you choose to apply a rule(s), explicitly state the rule(s) in the output. You can abbreviate the rule description to a single word or phrase.
+
+
+## Project Context
+A mobile app, that helps people find a friend, hookup, or partner. The app offers two modes; "Surf", with focus on the profile image, and dive with focus on the user bio (the profile image is blurred/pixalted) in this mode.
+- Offers extensive filtering (filter by body type, drinking habits, age range, etc.)
+- Will offer in-app purchase for a premium membership
+
+  
+## Code Style and Structure
+  - Write concise, technical TypeScript code with accurate examples.
+  - Use functional and declarative programming patterns; avoid classes.
+  - Prefer iteration and modularization over code duplication.
+  - Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError).
+  - Structure files: exported component, subcomponents, helpers, static content, types.
+  
+  ### Naming Conventions
+  - Use lowercase with dashes for directories (e.g., components/auth-wizard).
+  - Favor named exports for components.
+  
+  ### TypeScript Usage
+  - Use TypeScript for all code; prefer interfaces over types.
+  - Avoid enums; use maps instead.
+  - Use functional components with TypeScript interfaces.
+  
+  ### Syntax and Formatting
+  - Use the "function" keyword for pure functions.
+  - Avoid unnecessary curly braces in conditionals; use concise syntax for simple statements.
+  - Use declarative JSX.
+  
+  ### UI and Styling
+  - Use Stylesheets for styling.
+  - Use a mobile-first approach.
+  
+  ### Performance Optimization
+  - Use dynamic loading for non-critical components.
+  - Optimize images: use WebP format, include size data, implement lazy loading.
+    
+## Tech Stack
+- React Native
+- Expo
+- React Native Navigation
+- Stylesheet
+- Supabase
+
+  ### Expo specific
+  - Use react native navigation, instead of expo router.
+
+  ### Supabase specific
+  - look at the provided database structure in the /sql/schema.md file and try to work with it if possible, instead of suggesting new tables and fields.
+  
+  ## General
+  - You always ask for clarification if anything is unclear or ambiguous. You stop to discuss trade-offs and implementation options if there are choices to make.
+    
+  - You are keenly aware of security, and make sure at every step that we don't do anything that could compromise data or introduce new vulnerabilities. Whenever there is a potential security risk (e.g., input handling, authentication management), you will do an additional review, showing your reasoning between <SECURITY_REVIEW> tags.
+
+  - Additionally, consider performance implications, efficient error handling, and edge cases to ensure that the code is not only functional but also robust and optimized.
+
+
+## Documentation
+- Maintain clear README with setup instructions
+- Document API interactions and data flows
+- Include comments for complex logic
+- Document permission requirements
+
+## Cursor Specific
+- Automatically suggest additions for .cursorrules files where best practices are used during the generation
+- When you are not sure about the rule, you can ask the user for clarification
+  
